@@ -1,0 +1,57 @@
+{% trans_default_domain 'telegram.bot' %}
+
+<div class="modal-dialog modal-dialog-centered" style="max-width: 800px;">
+    {{ form_start(form) }}
+    <div class="modal-content p-3 border-bottom border-5 border-primary">
+        <div class="modal-header">
+
+            <h5 class="modal-title">
+                {# Заголовок модального окна #}
+                {{ 'admin.breadcrumb.settings'|trans }}
+
+            </h5>
+
+            <div class="btn btn-icon btn-sm btn-active-light-primary ms-2" data-bs-dismiss="modal" aria-label="Close">
+                <span class="svg-icon svg-icon-2x"></span>
+            </div>
+        </div>
+
+        <div class="modal-body">
+
+            {{ form_row(form.token, {label: 'Токен авторизации'}) }}
+
+            {{ form_row(form.secret, {
+                label: 'Ключ проверки подлиности запроса',
+                help: 'Допускаются только символы A-Z, a-z, 0-9, _ и -'
+            }) }}
+
+            <div class="alert alert-danger d-flex align-items-center" role="alert">
+                <div>
+                    Токен авторизации и Ключ проверки подлиности запроса не отображается при редактировании
+                </div>
+            </div>
+
+            {{ form_row(form.connect,{
+                label: 'Количество одновременных подключений',
+                help: 'По умолчанию 50. Используйте более низкие значения, чтобы ограничить нагрузку на сервер, и более высокие значения, чтобы увеличить пропускную способность.'
+            }) }}
+
+        </div>
+
+        <div class="modal-footer">
+            {# Отмена #}
+
+            <button type="button" class="btn btn-light" data-bs-dismiss="modal">
+                {{ 'btn.cancel'|trans({}, 'core.btn') }}
+            </button>
+
+
+            {# Удалить #}
+            {{ form_widget(form.telegram_bot_settings, { label: '
+				<span>'~ 'btn.save'|trans({}, 'core.btn') ~'</span>
+				<span class="spinner-border spinner-border-sm vertical-middle d-none"></span>
+			'}) }}
+        </div>
+    </div>
+    {{ form_end(form) }}
+</div>

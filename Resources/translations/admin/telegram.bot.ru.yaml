@@ -1,0 +1,14 @@
+admin:
+  page:
+    settings: 'Настрйоки подключения Telegram'
+
+  breadcrumb:
+    settings: 'Настрйоки подключения табелей учета Telegram '
+
+  success:
+    settings: 'Настрйоки подключения табелей учета Telegram успешно обновлены'
+
+  danger:
+    settings: '%s: Ошибка при обновлении настрйоек подключения табелей учета Telegram'
+
+
