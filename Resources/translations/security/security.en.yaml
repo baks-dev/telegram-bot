@@ -1,0 +1,4 @@
+# Role
+ROLE_TELEGRAM_SETTINGS:
+  name: 'Telegrambot'
+  desc: 'Telegram Bot connection settings'
