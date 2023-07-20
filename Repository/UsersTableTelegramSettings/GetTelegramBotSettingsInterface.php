@@ -31,5 +31,5 @@ interface GetTelegramBotSettingsInterface
 
     public function getSecret(): string;
 
-    public function equalsSecret(string $secret): bool;
+    public function equalsSecret(?string $secret): bool;
 }

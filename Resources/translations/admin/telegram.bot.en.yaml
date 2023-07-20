@@ -1,14 +1,13 @@
 admin:
   page:
-    settings: 'Настрйоки подключения табелей учета Telegram'
+    settings: 'Telegram Bot connection settings'
 
   breadcrumb:
-    settings: 'Настрйоки подключения табелей учета Telegram '
+    settings: 'Telegram Bot connection settings'
 
   success:
-    settings: 'Настрйоки подключения табелей учета Telegram успешно обновлены'
+    settings: 'Telegram Bot connection settings updated successfully'
 
   danger:
-    settings: '%s: Ошибка при обновлении настрйоек подключения табелей учета Telegram'
-
+    settings: '%s: Error updating Telegram Bot connection settings'
 

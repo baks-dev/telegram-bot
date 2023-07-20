@@ -39,5 +39,4 @@ return static function (ContainerConfigurator $configurator) {
     $services->load($namespace.'\Controller\\', __DIR__.'/../../Controller')
         ->tag('controller.service_arguments')
         ->exclude(__DIR__.'/../../Controller/**/*Test.php');
-
 };

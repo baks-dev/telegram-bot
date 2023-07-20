@@ -43,7 +43,7 @@ final class GetTelegramBotBotSettings implements GetTelegramBotSettingsInterface
     /**
      * Системный токен, для проверки подлинности запроса от бота.
      */
-    private string $secret;
+    private bool|string $secret = false;
 
 
 
@@ -155,8 +155,10 @@ final class GetTelegramBotBotSettings implements GetTelegramBotSettingsInterface
     /**
      * Secret.
      */
-    public function equalsSecret(string $secret): bool
+    public function equalsSecret(?string $secret): bool
     {
+        if(!$secret || !$this->secret) { return false; }
+
         return $this->secret === $secret;
     }
 }

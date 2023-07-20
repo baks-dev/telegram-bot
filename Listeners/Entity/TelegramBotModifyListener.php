@@ -21,7 +21,7 @@
  *  THE SOFTWARE.
  */
 
-namespace BaksDev\Telegram\Listeners\Entity;
+namespace BaksDev\Telegram\Bot\Listeners\Entity;
 
 use BaksDev\Core\Type\Ip\IpAddress;
 use BaksDev\Telegram\Bot\Entity\Modify\TelegramBotSettingsModify;

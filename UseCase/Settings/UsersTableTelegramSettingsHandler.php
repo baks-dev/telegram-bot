@@ -28,7 +28,7 @@ namespace BaksDev\Telegram\Bot\UseCase\Settings;
 use BaksDev\Core\Services\Messenger\MessageDispatchInterface;
 use BaksDev\Telegram\Bot\Entity\Event\TelegramBotSettingsEvent;
 use BaksDev\Telegram\Bot\Entity\TelegramBotSettings;
-use BaksDev\Telegram\Bot\Messenger\TelegramBotSettingsMessage;
+use BaksDev\Telegram\Bot\Messenger\Settings\TelegramBotSettingsMessage;
 use BaksDev\Telegram\Bot\Type\Settings\Id\UsersTableTelegramSettingsIdentificator;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
