@@ -26,8 +26,6 @@ declare(strict_types=1);
 namespace BaksDev\Telegram\Bot\Messenger\Callback;
 
 
-use Exception;
-
 final class TelegramCallbackMessage
 {
     /**
@@ -38,7 +36,7 @@ final class TelegramCallbackMessage
     /**
      * Идентификатор чата
      */
-    private int $chat;
+    private string $chat;
 
 
     /**
@@ -46,7 +44,15 @@ final class TelegramCallbackMessage
      */
     private ?string $data;
 
-    public function __construct(string $callback, int $chat, string $data = null)
+    public function __construct(mixed $class, int|string $chat, string $data = null)
+    {
+        $this->class = $class;
+        $this->data = $data;
+        $this->chat = (string) $chat;
+    }
+
+
+    /*public function __construct(string $callback, int $chat, string $data = null)
     {
         $call = explode(':', $callback);
         $class = current($call);
@@ -80,7 +86,7 @@ final class TelegramCallbackMessage
 
         $this->data = $data;
         $this->chat = $chat;
-    }
+    }*/
 
     /**
      * Class
@@ -101,7 +107,7 @@ final class TelegramCallbackMessage
     /**
      * Chat
      */
-    public function getChat(): int
+    public function getChat(): string
     {
         return $this->chat;
     }

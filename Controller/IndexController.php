@@ -25,27 +25,24 @@ declare(strict_types=1);
 
 namespace BaksDev\Telegram\Bot\Controller;
 
-use BaksDev\Auth\Telegram\Bot\Login\Email\LoginTelegram;
-use BaksDev\Auth\Telegram\Repository\ExistAccountTelegram\ExistAccountTelegramInterface;
-use BaksDev\Auth\Telegram\UseCase\Admin\NewEdit\AccountTelegramHandler;
 use BaksDev\Core\Controller\AbstractController;
 use BaksDev\Core\Listeners\Event\Security\RoleSecurity;
 use BaksDev\Core\Services\Messenger\MessageDispatchInterface;
-use BaksDev\Telegram\Api\TelegramDeleteMessage;
 use BaksDev\Telegram\Api\TelegramGetFile;
 use BaksDev\Telegram\Api\TelegramSendMessage;
 use BaksDev\Telegram\Bot\Messenger\Callback\Ping\TelegramChatPingUid;
-use BaksDev\Telegram\Bot\Messenger\Callback\Pong\TelegramChatPongUid;
+use BaksDev\Telegram\Bot\Messenger\Callback\Start\TelegramChatStart;
 use BaksDev\Telegram\Bot\Messenger\Callback\TelegramCallbackMessage;
 use BaksDev\Telegram\Bot\Repository\UsersTableTelegramSettings\GetTelegramBotSettingsInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Cache\Adapter\ApcuAdapter;
+use Symfony\Component\DependencyInjection\Attribute\TaggedIterator;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
-use Symfony\Component\Translation\LocaleSwitcher;
 use Symfony\Contracts\Cache\ItemInterface;
+use Symfony\Contracts\Translation\TranslatorInterface;
 use Zxing\QrReader;
 
 #[RoleSecurity('ROLE_USER')]
@@ -62,9 +59,22 @@ final class IndexController extends AbstractController
     private ?string $text = null;
 
     /**
-     * Кешированные данные
+     * Значение раздела, в котором происходят задания
      */
-    private ?array $data = null;
+    private mixed $callback = null;
+
+    /**
+     * Идентификатор задания (QR)
+     */
+    private mixed $identifier = null;
+
+    /**
+     * Идентификатор последнего сообщения
+     */
+    private mixed $last;
+
+
+    private ApcuAdapter $cache;
 
 
     /**
@@ -72,21 +82,17 @@ final class IndexController extends AbstractController
      */
     #[Route('/telegram/endpoint', name: 'telegram.endpoint', methods: ['GET', 'POST'])]
     public function index(
+        #[TaggedIterator('baks.telegram.callback')] iterable $callback,
         Request $request,
         MessageDispatchInterface $messageDispatch,
-        LocaleSwitcher $localeSwitcher,
-        ExistAccountTelegramInterface $existAccountTelegram,
         GetTelegramBotSettingsInterface $UsersTableTelegramSettings,
-        LoggerInterface $logger,
-        TelegramSendMessage $sendMessage,
-        TelegramDeleteMessage $deleteMessage,
+        TelegramSendMessage $sendMessage, // Установки токена и чата в TelegramBotAuthenticator
         TelegramGetFile $telegramGetFile,
-        LoginTelegram $loginTelegram,
-        AccountTelegramHandler $AccountTelegramHandler,
+        TranslatorInterface $translator,
+        LoggerInterface $logger,
+
     ): Response
     {
-
-        //return new JsonResponse(['success']);
 
         $content = json_decode($request->getContent(), true);
 
@@ -95,12 +101,52 @@ final class IndexController extends AbstractController
             return new JsonResponse(['success']);
         }
 
+
+        //return new JsonResponse(['success']);
+
+        $this->cache = new ApcuAdapter('TelegramBot');
+
+        /**
+         * Если пользователь кликнул по кнопке
+         */
         if(isset($content['callback_query']))
         {
-            $this->chat = $content['callback_query']['message']['from']['id'];
-            $this->text = $content['callback_query']['data'];
+            $this->chat = (int) $content['callback_query']['message']['chat']['id'];
+
+            /**
+             * Колбек вернул идентификатор - присваиваем identifier не сбрасывая callback
+             */
+            if(preg_match('{^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$}Di', $content['callback_query']['data']))
+            {
+                $this->identifier = $content['callback_query']['data'];
+
+                $this->cache->delete('identifier-'.$this->chat);
+                $this->cache->get('identifier-'.$this->chat, function(ItemInterface $item) {
+                    $item->expiresAfter(60 * 60 * 24);
+                    return $this->identifier;
+                });
+            }
+
+            /**
+             * Колбек вызова класса - присваиваем callback
+             */
+            else
+            {
+                $this->callback = $content['callback_query']['data'];
+
+                $this->cache->delete('callback-'.$this->chat);
+                $this->cache->get('callback-'.$this->chat, function(ItemInterface $item) {
+                    $item->expiresAfter(60 * 60 * 24);
+                    return $this->callback;
+                });
+            }
         }
-        else
+
+
+        /**
+         * Если пользователем передан текст сообщения
+         */
+        if(!isset($content['callback_query']))
         {
             /* Устанавливаем локаль согласно чату */
             //$language = $content['message']['from']['language_code'];
@@ -111,22 +157,24 @@ final class IndexController extends AbstractController
             $this->chat = $content['message']['from']['id'];
             $this->text = $content['message']['text'] ?? null;
 
+            /**
+             * Если текст сообщения = идентификатор - присваиваем
+             */
+            if($this->text && preg_match('{^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$}Di', $this->text))
+            {
+                $this->identifier = $this->text;
+
+                $this->cache->delete('identifier-'.$this->chat);
+                $this->cache->get('identifier-'.$this->chat, function(ItemInterface $item) {
+                    $item->expiresAfter(60 * 60 * 24);
+                    return $this->identifier;
+                });
+            }
+
         }
 
 
-        /* Получаем действия пользователя */
-        $ApcuAdapter = new ApcuAdapter();
-        $this->data = $ApcuAdapter->get((string) $this->chat, function(ItemInterface $item) {
-            $item->expiresAfter(60 * 60 * 24);
-            return $this->data;
-        });
-
-
-        /** Инициируем настройки Telegram Bot */
-        $UsersTableTelegramSettings->settings();
-
-
-        /** Если передан QR  */
+        /** Если пользователем передан QR  */
         if(isset($content['message']['photo']))
         {
             /** Получаем файл изображения QR */
@@ -149,9 +197,14 @@ final class IndexController extends AbstractController
                 /** Удаляем файл после анализа */
                 unlink($file['tmp_file']);
 
-                if($QRdata)
+                if($QRdata && preg_match('{^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$}Di', $QRdata))
                 {
-                    $this->data['callback'] = $QRdata;
+                    $this->identifier = $QRdata;
+                    $this->cache->delete('identifier-'.$this->chat);
+                    $this->cache->get('identifier-'.$this->chat, function(ItemInterface $item) {
+                        $item->expiresAfter(60 * 60 * 24);
+                        return $this->identifier;
+                    });
                 }
             }
 
@@ -161,163 +214,108 @@ final class IndexController extends AbstractController
                     ->message('Не можем распознать')
                     ->send(false);
 
-                unset($this->data['callback']);
+                $this->cache->delete('identifier-'.$this->chat);
             }
         }
 
 
+        $this->callback = $this->cache->getItem('callback-'.$this->chat)->get();
+        $this->identifier = $this->cache->getItem('identifier-'.$this->chat)->get();
+
+
         if($this->text === '/ping')
         {
-            $this->data['callback'] = TelegramChatPingUid::class.':'.TelegramChatPingUid::TEST;
+            $messageDispatch->dispatch(new TelegramChatPingUid(TelegramChatPingUid::TEST), transport: 'telegram');
+            return new JsonResponse(['success']);
+
         }
 
-        if($this->text === '/pong')
+        /**
+         * Вызываем меню выбора раздела
+         */
+        if($this->text === '/start' || $this->callback === null)
         {
-            $this->data['callback'] = TelegramChatPongUid::class.':'.TelegramChatPongUid::TEST;
+            $this->cache->delete('callback-'.$this->chat);
+            $this->cache->delete('identifier-'.$this->chat);
+
+            $menu = null;
+
+            foreach($callback as $call)
+            {
+                if($this->isGranted($call->getRole()))
+                {
+                    $menu[] = [
+                        'text' => $translator->trans($call->getRole().'.name', domain: 'security'),
+                        'callback_data' => $call->getClass(),
+                    ];
+                }
+            }
+
+
+            if($menu)
+            {
+                $markup = json_encode([
+                    'inline_keyboard' => array_chunk($menu, 1),
+                ]);
+
+                /** Отправляем пользовательское сообщение  */
+                $sendMessage
+                    ->message('<b>Выберите пожалуйста раздел:</b>')
+                    ->markup($markup)
+                    ->send(false);
+            }
+
+
+            return new JsonResponse(['success']);
         }
 
-        if(isset($this->data['callback']))
+
+        /**
+         * Если имеется Callback и идентификатор - инициируем класс с идентификатором
+         */
+        if($this->callback && $this->identifier)
         {
-            $TelegramCallbackMessage = new TelegramCallbackMessage($this->data['callback'], $this->chat, $this->text);
-            $messageDispatch->dispatch($TelegramCallbackMessage, transport: 'telegram');
+            $instance = $this->callback;
+            $callbackClass = new $instance($this->identifier);
+            $messageDispatch->dispatch(new TelegramCallbackMessage($callbackClass, $this->chat, $this->text), transport: 'telegram');
+            return new JsonResponse(['success']);
+        }
+
+
+        if($this->callback && !$this->identifier)
+        {
+
+            $section = null;
+            foreach($callback as $call)
+            {
+                if($call->getClass() === $this->callback)
+                {
+                    $section = $translator->trans($call->getRole().'.name', domain: 'security');
+                    break;
+                }
+            }
+
+            /**
+             * Передается ID продукта
+             * либо CONST торгового предложения
+             * либо CONST множественного варианта предложения
+             * либо CONST модификации множественного варианта предложения
+             */
+            $response = $sendMessage
+                ->message(sprintf(" %s \nВышлите QR продукта, либо его идентификатор",
+                    $section ? ' <b>'.$section.':</b>' : ''))
+                ->send(false);
+
+
+            $this->last = $response['result']['message_id'];
+            $this->cache->delete('last-'.$this->chat);
+            $this->cache->get('last-'.$this->chat, function(ItemInterface $item) {
+                $item->expiresAfter(60 * 60 * 24);
+                return $this->last;
+            });
+
         }
 
         return new JsonResponse(['success']);
-
-
-        //$logger->critical($request->getContent());
-
-        $settings = $UsersTableTelegramSettings->settings();
-
-        //        /** Проверяем токен запроса */
-        //        if(!$settings->equalsSecret($request->headers->get('X-Telegram-Bot-Api-Secret-Token')))
-        //        {
-        //            throw new RouteNotFoundException('Page Not Found');
-        //        }
-
-
-        $sendMessage
-            ->token($settings->getToken())
-            ->chanel($this->chat)
-            ->message($this->getUser()->getUserIdentifier())
-            ->send();
-
-        return new JsonResponse(['success']);
-
-
-        //        /* Получаем действия пользователя */
-        //        $ApcuAdapter = new ApcuAdapter();
-        //        $this->data = $ApcuAdapter->get((string)$this->chat, function(ItemInterface $item) {
-        //            $item->expiresAfter(60 * 60 * 24);
-        //            return $this->data;
-        //        });
-        //
-        //        $sendMessage
-        //            ->token($settings->getToken())
-        //            ->chanel($this->chat);
-        //
-        //        $deleteMessage
-        //            ->token($settings->getToken())
-        //            ->chanel($this->chat);
-        //
-        //
-        //        /** Удаляем предыдущее сообщение пользователя */
-        //        if(isset($this->data['last']))
-        //        {
-        //            $deleteMessage
-        //                ->delete($id)
-        //                ->send();
-        //
-        //            unset($this->data['last']);
-        //        }
-        //
-        //        /** Удаляем предыдущее отправленное системой сообщение */
-        //        if(isset($this->data['request']))
-        //        {
-        //            $deleteMessage
-        //                ->delete($this->data['request'])
-        //                ->send();
-        //
-        //            unset($this->data['request']);
-        //        }
-        //
-        //        /** Сохраняем сообщение пользователя для последующего удаления*/
-        //        $this->data['last'] = $id;
-        //
-        //        /** Проверяем пользователя  */
-        //        $existAccountTelegram->isExistAccountTelegram($this->chat);
-
-        /** Если пользователь не зарегистрирован - проходим Авторизацию */
-        //        if($text && !$existAccountTelegram->isExistAccountTelegram($this->chat))
-        //        {
-        //            $loginTelegram
-        //                ->chat($this->chat)
-        //                ->handle($text);
-        //
-        //            /** Сохраняем пользователя в случае успешной авторизации */
-        //            if($loginTelegram->getStep() instanceof LoginStepSuccess)
-        //            {
-        //                $AccountTelegramDTO = new AccountTelegramDTO();
-        //                $AccountTelegramDTO->setAccount($loginTelegram->getStep()->getUser());
-        //                $AccountTelegramDTO->setChat($content['message']['chat']['id']);
-        //
-        //                if(isset($content['message']['chat']['username']))
-        //                {
-        //                    $AccountTelegramDTO->setUsername($content['message']['chat']['username']);
-        //                }
-        //
-        //                if(isset($content['message']['chat']['first_name']))
-        //                {
-        //                    $AccountTelegramDTO->setFirstname($content['message']['chat']['first_name']);
-        //                }
-        //
-        //                $AccountTelegram = $AccountTelegramHandler->handle($AccountTelegramDTO);
-        //
-        //                if(!$AccountTelegram instanceof AccountTelegram)
-        //                {
-        //                    $sendMessage
-        //                        ->message(sprintf('%s: Ошибка авторизации', $AccountTelegram))
-        //                        ->send();
-        //                }
-        //                else
-        //                {
-        //                    $request = $loginTelegram->getSendMessage()?->send(false);
-        //
-        //                    if($request)
-        //                    {
-        //                        $this->data['request'] = $request['result']['message_id'];
-        //                    }
-        //                }
-        //            }
-        //            else
-        //            {
-        //                $request = $loginTelegram->getSendMessage()?->send(false);
-        //
-        //                if($request)
-        //                {
-        //                    $this->data['request'] = $request['result']['message_id'];
-        //                }
-        //            }
-        //
-        //            $this->resetCache();
-        //            return new JsonResponse(['success']);
-        //
-        //        }
-
-
-    }
-
-    /**
-     * Сбрасываем и сохраняем кешированные данные
-     */
-    public function resetCache(): void
-    {
-        $ApcuAdapter = new ApcuAdapter();
-
-        $ApcuAdapter->delete((string) $this->chat);
-        $ApcuAdapter->get((string) $this->chat, function(ItemInterface $item) {
-            $item->expiresAfter(60 * 60 * 24);
-            return $this->data;
-        });
     }
 }
