@@ -27,16 +27,18 @@ return static function (ContainerConfigurator $configurator) {
     
     $services = $configurator->services()
         ->defaults()
-        ->autowire()      // Automatically injects dependencies in your services.
-        ->autoconfigure() // Automatically registers your services as commands, event subscribers, etc.
+        ->autowire()
+        ->autoconfigure()
     ;
 
-    $namespace = 'BaksDev\Telegram\Bot';
+    $NAMESPACE = 'BaksDev\Telegram\Bot\\';
 
-    $services->load($namespace.'\\', __DIR__.'/../../')
-        ->exclude(__DIR__.'/../../{Controller,Entity,Resources,Type,Tests,*DTO.php,*Message.php}');
+    $MODULE = substr(__DIR__, 0, strpos(__DIR__, "Resources"));
 
-    $services->load($namespace.'\Controller\\', __DIR__.'/../../Controller')
+    $services->load($NAMESPACE, $MODULE)
+        ->exclude($MODULE.'{Controller,Entity,Resources,Type,Tests,*DTO.php,*Message.php}');
+
+    $services->load($NAMESPACE.'Controller\\', $MODULE.'Controller')
         ->tag('controller.service_arguments')
-        ->exclude(__DIR__.'/../../Controller/**/*Test.php');
+        ->exclude($MODULE.'Controller/**/*Test.php');
 };

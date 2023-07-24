@@ -33,14 +33,14 @@ return static function(ContainerConfigurator $container, DoctrineConfig $doctrin
 {
     $doctrine->dbal()->type(UsersTableTelegramSettingsIdentificator::TYPE)->class(UsersTableTelegramSettingsIdentificatorType::class);
     $doctrine->dbal()->type(TelegramBotSettingsEventUid::TYPE)->class(TelegramBotSettingsEventType::class);
-    
-	$emDefault = $doctrine->orm()->entityManager('default');
-	
-	$emDefault->autoMapping(true);
-    
-	$emDefault->mapping('TelegramBot')
+
+    $emDefault = $doctrine->orm()->entityManager('default')->autoMapping(true);
+
+    $MODULE = substr(__DIR__, 0, strpos(__DIR__, "Resources"));
+
+    $emDefault->mapping('TelegramBot')
 		->type('attribute')
-		->dir(__DIR__.'/../../Entity')
+		->dir($MODULE.'Entity')
 		->isBundle(false)
 		->prefix('BaksDev\Telegram\Bot')
 		->alias('TelegramBot')

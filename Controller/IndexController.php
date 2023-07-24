@@ -262,11 +262,15 @@ final class IndexController extends AbstractController
                 $sendMessage
                     ->message('<b>Выберите пожалуйста раздел:</b>')
                     ->markup($markup)
-                    ->send(false);
+                    ->send();
+
+                return new JsonResponse(['success']);
             }
 
-
-            return new JsonResponse(['success']);
+            /** Отправляем пользовательское сообщение  */
+            $sendMessage
+                ->message('К сожалению нам нечего Вам предложить')
+                ->send(false);
         }
 
 
