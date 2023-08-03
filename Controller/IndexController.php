@@ -31,7 +31,6 @@ use BaksDev\Core\Services\Messenger\MessageDispatchInterface;
 use BaksDev\Telegram\Api\TelegramGetFile;
 use BaksDev\Telegram\Api\TelegramSendMessage;
 use BaksDev\Telegram\Bot\Messenger\Callback\Ping\TelegramChatPingUid;
-use BaksDev\Telegram\Bot\Messenger\Callback\Start\TelegramChatStart;
 use BaksDev\Telegram\Bot\Messenger\Callback\TelegramCallbackMessage;
 use BaksDev\Telegram\Bot\Repository\UsersTableTelegramSettings\GetTelegramBotSettingsInterface;
 use Psr\Log\LoggerInterface;
@@ -40,11 +39,12 @@ use Symfony\Component\DependencyInjection\Attribute\TaggedIterator;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Attribute\AsController;
 use Symfony\Component\Routing\Annotation\Route;
-use Symfony\Contracts\Cache\ItemInterface;
 use Symfony\Contracts\Translation\TranslatorInterface;
 use Zxing\QrReader;
 
+#[AsController]
 #[RoleSecurity('ROLE_USER')]
 final class IndexController extends AbstractController
 {
@@ -101,8 +101,7 @@ final class IndexController extends AbstractController
             return new JsonResponse(['success']);
         }
 
-
-        //return new JsonResponse(['success']);
+        
 
         $this->cache = new ApcuAdapter('TelegramBot');
 
@@ -118,27 +117,27 @@ final class IndexController extends AbstractController
              */
             if(preg_match('{^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$}Di', $content['callback_query']['data']))
             {
-                $this->identifier = $content['callback_query']['data'];
 
-                $this->cache->delete('identifier-'.$this->chat);
-                $this->cache->get('identifier-'.$this->chat, function(ItemInterface $item) {
-                    $item->expiresAfter(60 * 60 * 24);
-                    return $this->identifier;
-                });
+                /** Сохраняем идентификатор */
+                $this->identifier = $content['callback_query']['data'];
+                $lastMessage = $this->cache->getItem('identifier-'.$this->chat);
+                $lastMessage->set($this->identifier);
+                $lastMessage->expiresAfter(60 * 60 * 24);
+                $this->cache->save($lastMessage);
             }
+
 
             /**
              * Колбек вызова класса - присваиваем callback
              */
             else
             {
+                /** Сохраняем Сallback */
                 $this->callback = $content['callback_query']['data'];
-
-                $this->cache->delete('callback-'.$this->chat);
-                $this->cache->get('callback-'.$this->chat, function(ItemInterface $item) {
-                    $item->expiresAfter(60 * 60 * 24);
-                    return $this->callback;
-                });
+                $lastMessage = $this->cache->getItem('callback-'.$this->chat);
+                $lastMessage->set($this->callback);
+                $lastMessage->expiresAfter(60 * 60 * 24);
+                $this->cache->save($lastMessage);
             }
         }
 
@@ -148,27 +147,20 @@ final class IndexController extends AbstractController
          */
         if(!isset($content['callback_query']))
         {
-            /* Устанавливаем локаль согласно чату */
-            //$language = $content['message']['from']['language_code'];
-            //$localeSwitcher->setLocale($language);
-            //$id = $content['message']['message_id'];
-
-
             $this->chat = $content['message']['from']['id'];
             $this->text = $content['message']['text'] ?? null;
 
             /**
-             * Если текст сообщения = идентификатор - присваиваем
+             * Если текст сообщения является идентификатором Uid - присваиваем
              */
             if($this->text && preg_match('{^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$}Di', $this->text))
             {
+                /** Сохраняем идентификатор */
                 $this->identifier = $this->text;
-
-                $this->cache->delete('identifier-'.$this->chat);
-                $this->cache->get('identifier-'.$this->chat, function(ItemInterface $item) {
-                    $item->expiresAfter(60 * 60 * 24);
-                    return $this->identifier;
-                });
+                $lastMessage = $this->cache->getItem('identifier-'.$this->chat);
+                $lastMessage->set($this->identifier);
+                $lastMessage->expiresAfter(60 * 60 * 24);
+                $this->cache->save($lastMessage);
             }
 
         }
@@ -185,26 +177,25 @@ final class IndexController extends AbstractController
             /** Скачиваем по порядку фото для анализа  */
             foreach($content['message']['photo'] as $photo)
             {
-
                 $file = $telegramGetFile
-                    //->token($settings->getToken())
                     ->file($photo['file_id'])
                     ->send(false);
 
                 $qrcode = new QrReader($file['tmp_file']);
                 $QRdata = (string) $qrcode->text(); // декодированный текст из QR-кода
 
-                /** Удаляем файл после анализа */
+                /** Удаляем временный файл после анализа */
                 unlink($file['tmp_file']);
 
                 if($QRdata && preg_match('{^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$}Di', $QRdata))
                 {
+                    /** Сохраняем идентификатор */
                     $this->identifier = $QRdata;
-                    $this->cache->delete('identifier-'.$this->chat);
-                    $this->cache->get('identifier-'.$this->chat, function(ItemInterface $item) {
-                        $item->expiresAfter(60 * 60 * 24);
-                        return $this->identifier;
-                    });
+                    $lastMessage = $this->cache->getItem('identifier-'.$this->chat);
+                    $lastMessage->set($this->identifier);
+                    $lastMessage->expiresAfter(60 * 60 * 24);
+                    $this->cache->save($lastMessage);
+
                 }
             }
 
@@ -222,7 +213,6 @@ final class IndexController extends AbstractController
         $this->callback = $this->cache->getItem('callback-'.$this->chat)->get();
         $this->identifier = $this->cache->getItem('identifier-'.$this->chat)->get();
 
-
         if($this->text === '/ping')
         {
             $messageDispatch->dispatch(new TelegramChatPingUid(TelegramChatPingUid::TEST), transport: 'telegram');
@@ -231,9 +221,26 @@ final class IndexController extends AbstractController
         }
 
         /**
+         * Отправляем сообщение с идентификатором чата
+         */
+        if($this->text === '/identifier')
+        {
+            /** Отправляем пользовательское сообщение c идентификатором чата  */
+            $response = $sendMessage->message('Идентификатор: '.$this->chat)->send(false);
+
+            /** Сохраняем последнее сообщение */
+            $lastMessage = $this->cache->getItem('last-'.$this->chat);
+            $lastMessage->set($response['result']['message_id']);
+            $lastMessage->expiresAfter(60 * 60 * 24);
+            $this->cache->save($lastMessage);
+
+            return new JsonResponse(['success']);
+        }
+
+        /**
          * Вызываем меню выбора раздела
          */
-        if($this->text === '/start' || $this->callback === null)
+        if($this->text === '/start' || empty($this->callback))
         {
             $this->cache->delete('callback-'.$this->chat);
             $this->cache->delete('identifier-'.$this->chat);
@@ -250,13 +257,12 @@ final class IndexController extends AbstractController
                     ];
                 }
             }
-
-
+            
             if($menu)
             {
                 $markup = json_encode([
                     'inline_keyboard' => array_chunk($menu, 1),
-                ]);
+                ], JSON_THROW_ON_ERROR);
 
                 /** Отправляем пользовательское сообщение  */
                 $sendMessage
@@ -286,6 +292,9 @@ final class IndexController extends AbstractController
         }
 
 
+        /**
+         * Если в запросе отсутствует идентификатор - отправляем сообщение с требованием
+         */
         if($this->callback && !$this->identifier)
         {
 
@@ -306,20 +315,20 @@ final class IndexController extends AbstractController
              * либо CONST модификации множественного варианта предложения
              */
             $response = $sendMessage
-                ->message(sprintf(" %s \nВышлите QR продукта, либо его идентификатор",
+                ->message(sprintf(" %s \nВышлите QR код, либо его идентификатор",
                     $section ? ' <b>'.$section.':</b>' : ''))
                 ->send(false);
 
-
-            $this->last = $response['result']['message_id'];
-            $this->cache->delete('last-'.$this->chat);
-            $this->cache->get('last-'.$this->chat, function(ItemInterface $item) {
-                $item->expiresAfter(60 * 60 * 24);
-                return $this->last;
-            });
+            /** Сохраняем последнее сообщение */
+            $lastMessage = $this->cache->getItem('last-'.$this->chat);
+            $lastMessage->set($response['result']['message_id']);
+            $lastMessage->expiresAfter(60 * 60 * 24);
+            $this->cache->save($lastMessage);
 
         }
 
         return new JsonResponse(['success']);
     }
 }
+
+

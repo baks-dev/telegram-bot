@@ -25,13 +25,11 @@ declare(strict_types=1);
 
 namespace BaksDev\Telegram\Bot\Repository\UsersTableTelegramSettings;
 
+use BaksDev\Core\Doctrine\DBALQueryBuilder;
+use BaksDev\Core\Doctrine\ORMQueryBuilder;
 use BaksDev\Telegram\Bot\Entity\Event\TelegramBotSettingsEvent;
 use BaksDev\Telegram\Bot\Entity\TelegramBotSettings;
 use BaksDev\Telegram\Bot\Type\Settings\Id\UsersTableTelegramSettingsIdentificator;
-use Doctrine\DBAL\Cache\QueryCacheProfile;
-use Doctrine\DBAL\Connection;
-use Doctrine\ORM\EntityManagerInterface;
-use Symfony\Component\Cache\Adapter\ApcuAdapter;
 
 final class GetTelegramBotBotSettings implements GetTelegramBotSettingsInterface
 {
@@ -45,23 +43,22 @@ final class GetTelegramBotBotSettings implements GetTelegramBotSettingsInterface
      */
     private bool|string $secret = false;
 
-
-
-    private Connection $connection;
-
-    private EntityManagerInterface $entityManager;
+    private DBALQueryBuilder $DBALQueryBuilder;
+    private ORMQueryBuilder $ORMQueryBuilder;
 
     public function __construct(
-        EntityManagerInterface $entityManager
+        DBALQueryBuilder $DBALQueryBuilder,
+        ORMQueryBuilder $ORMQueryBuilder,
+
     )
     {
-        $this->entityManager = $entityManager;
-        $this->connection = $entityManager->getConnection();
+        $this->DBALQueryBuilder = $DBALQueryBuilder;
+        $this->ORMQueryBuilder = $ORMQueryBuilder;
     }
 
     public function getUsersTableTelegramSettingsEvent(): TelegramBotSettingsEvent
     {
-        $qb = $this->entityManager->createQueryBuilder();
+        $qb = $this->ORMQueryBuilder->createQueryBuilder(self::class);
 
         $qb->select('event');
 
@@ -82,16 +79,15 @@ final class GetTelegramBotBotSettings implements GetTelegramBotSettingsInterface
             'event.id = settings.event'
         );
 
-        $result = $qb->getQuery()->getOneOrNullResult();
-
-        return $result ?: new TelegramBotSettingsEvent();
+        /* Кешируем результат ORM */
+        return $qb->enableCache('TelegramBot', 60)->getOneOrNullResult();
 
     }
 
 
     public function settings(): self|bool
     {
-        $qb = $this->connection->createQueryBuilder();
+        $qb = $this->DBALQueryBuilder->createQueryBuilder(self::class);
 
         $qb->select('event.token');
         $qb->addSelect('event.secret');
@@ -113,17 +109,9 @@ final class GetTelegramBotBotSettings implements GetTelegramBotSettingsInterface
             UsersTableTelegramSettingsIdentificator::TYPE
         );
 
-        /* Кешируем результат запроса DBAL */
-        $cache = new ApcuAdapter('TelegramBot');
-        $config = $this->connection->getConfiguration();
-        $config?->setResultCache($cache);
 
-        $settings = $this->connection->executeCacheQuery(
-            $qb->getSQL(),
-            $qb->getParameters(),
-            $qb->getParameterTypes(),
-            new QueryCacheProfile((60 * 60 * 24 * 30 * 12))
-        )->fetchAssociative();
+        /* Кешируем результат DBAL */
+        $settings = $qb->enableCache('TelegramBot', 3600)->fetchAssociative();
 
         if($settings)
         {
@@ -135,7 +123,7 @@ final class GetTelegramBotBotSettings implements GetTelegramBotSettingsInterface
 
         return false;
     }
-    
+
     /**
      * Token.
      */
@@ -157,7 +145,10 @@ final class GetTelegramBotBotSettings implements GetTelegramBotSettingsInterface
      */
     public function equalsSecret(?string $secret): bool
     {
-        if(!$secret || !$this->secret) { return false; }
+        if(!$secret || !$this->secret)
+        {
+            return false;
+        }
 
         return $this->secret === $secret;
     }

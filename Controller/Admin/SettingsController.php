@@ -36,9 +36,11 @@ use BaksDev\Telegram\Bot\UseCase\Settings\UsersTableTelegramSettingsHandler;
 use BaksDev\Telegram\Exception\TelegramRequestException;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Attribute\AsController;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
+#[AsController]
 #[RoleSecurity('ROLE_TELEGRAM_SETTINGS')]
 final class SettingsController extends AbstractController
 {
