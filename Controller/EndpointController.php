@@ -46,7 +46,7 @@ use Zxing\QrReader;
 
 #[AsController]
 #[RoleSecurity('ROLE_USER')]
-final class IndexController extends AbstractController
+final class EndpointController extends AbstractController
 {
     /**
      * Идентификатор чата
@@ -93,15 +93,12 @@ final class IndexController extends AbstractController
 
     ): Response
     {
-
         $content = json_decode($request->getContent(), true);
 
         if(!$content)
         {
             return new JsonResponse(['success']);
         }
-
-        
 
         $this->cache = new ApcuAdapter('TelegramBot');
 
@@ -237,6 +234,7 @@ final class IndexController extends AbstractController
             return new JsonResponse(['success']);
         }
 
+
         /**
          * Вызываем меню выбора раздела
          */
@@ -249,7 +247,7 @@ final class IndexController extends AbstractController
 
             foreach($callback as $call)
             {
-                if($this->isGranted($call->getRole()))
+                if($this->isGranted($call->getRole()) || $this->isGranted('ROLE_ADMIN'))
                 {
                     $menu[] = [
                         'text' => $translator->trans($call->getRole().'.name', domain: 'security'),

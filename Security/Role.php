@@ -28,12 +28,12 @@ namespace BaksDev\Telegram\Bot\Security;
 use BaksDev\Menu\Admin\Command\Upgrade\MenuAdminInterface;
 use BaksDev\Menu\Admin\Type\SectionGroup\Group\Collection\MenuAdminSectionGroupCollectionInterface;
 use BaksDev\Menu\Admin\Type\SectionGroup\Group\MenuGroupSettings;
-use BaksDev\Users\Groups\Group\DataFixtures\Security\RoleFixturesInterface;
+use BaksDev\Users\Profile\Group\Security\RoleInterface;
 use Symfony\Component\DependencyInjection\Attribute\AutoconfigureTag;
 
 #[AutoconfigureTag('baks.security.role')]
 #[AutoconfigureTag('baks.menu.admin')]
-class Role implements RoleFixturesInterface, MenuAdminInterface
+class Role implements RoleInterface, MenuAdminInterface
 {
     public const ROLE = 'ROLE_TELEGRAM_SETTINGS';
 

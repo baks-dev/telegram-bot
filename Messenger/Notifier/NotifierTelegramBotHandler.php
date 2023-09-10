@@ -60,6 +60,7 @@ final class NotifierTelegramBotHandler
             ->message($message->getMessage())
         ;
 
+        /* Если указана ссылка - добавляем кнопку для перехода */
         if($message->getLink())
         {
             $menu[] = [
