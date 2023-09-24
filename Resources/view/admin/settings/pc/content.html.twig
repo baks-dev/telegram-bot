@@ -39,18 +39,25 @@
         </div>
 
         <div class="modal-footer">
-            {# Отмена #}
 
-            <button type="button" class="btn btn-light" data-bs-dismiss="modal">
-                {{ 'btn.cancel'|trans({}, 'core.btn') }}
-            </button>
+            <div class="flex-grow-1">
+                &nbsp;
+            </div>
+
+            <div class="d-flex gap-3">
+                {# Отмена #}
+
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">
+                    {{ 'btn.cancel'|trans({}, 'core.btn') }}
+                </button>
 
 
-            {# Удалить #}
-            {{ form_widget(form.telegram_bot_settings, { label: '
-				<span>'~ 'btn.save'|trans({}, 'core.btn') ~'</span>
-				<span class="spinner-border spinner-border-sm vertical-middle d-none"></span>
-			'}) }}
+                {# Удалить #}
+                {{ form_widget(form.telegram_bot_settings, { label: '
+                    <span>'~ 'btn.save'|trans({}, 'core.btn') ~'</span>
+                    <span class="spinner-border spinner-border-sm vertical-middle d-none"></span>
+                '}) }}
+            </div>
         </div>
     </div>
     {{ form_end(form) }}

@@ -25,10 +25,10 @@ declare(strict_types=1);
 
 namespace BaksDev\Telegram\Bot\Messenger\Callback\Pong;
 
+use BaksDev\Core\Cache\AppCacheInterface;
 use BaksDev\Telegram\Api\TelegramSendMessage;
 use BaksDev\Telegram\Bot\Messenger\Callback\TelegramCallbackMessage;
 use BaksDev\Telegram\Bot\Repository\UsersTableTelegramSettings\GetTelegramBotSettingsInterface;
-use Symfony\Component\Cache\Adapter\ApcuAdapter;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 
 #[AsMessageHandler(fromTransport: 'sync')]
@@ -36,14 +36,17 @@ final class TelegramChatPong
 {
     private TelegramSendMessage $telegramSendMessage;
     private GetTelegramBotSettingsInterface $settings;
+    private AppCacheInterface $cache;
 
     public function __construct(
         TelegramSendMessage $telegramSendMessage,
         GetTelegramBotSettingsInterface $settings,
+        AppCacheInterface $cache
     )
     {
         $this->telegramSendMessage = $telegramSendMessage;
         $this->settings = $settings;
+        $this->cache = $cache;
     }
 
     public function __invoke(TelegramCallbackMessage $message)
@@ -52,18 +55,20 @@ final class TelegramChatPong
         {
             $settings = $this->settings->settings();
 
-            /** Отправляем пользовательское сообщение  */
+            /**
+             * Отправляем пользовательское сообщение
+             */
             $this->telegramSendMessage
                 ->token($settings->getToken())
                 ->chanel($message->getChat())
                 ->message('PONG: '.$message->getClass()->getValue())
                 ->send();
 
-            
-
-            /** Сбрасываем состояние диалога */
-            $ApcuAdapter = new ApcuAdapter();
-            $ApcuAdapter->delete((string) $message->getChat());
+            /**
+             * Сбрасываем состояние диалога
+             */
+            $RedisCache = $this->cache->init('TelegramBot');
+            $RedisCache->delete($message->getChat());
 
         }
     }

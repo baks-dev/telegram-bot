@@ -21,24 +21,23 @@
  *  THE SOFTWARE.
  */
 
-declare(strict_types=1);
+namespace Symfony\Component\DependencyInjection\Loader\Configurator;
 
-namespace BaksDev\Telegram\Bot\Messenger\Callback\Ping;
+use Symfony\Config\FrameworkConfig;
 
-use Symfony\Component\DependencyInjection\Attribute\AutoconfigureTag;
+return static function(FrameworkConfig $framework) {
 
-#[AutoconfigureTag('baks.telegram.callback')]
-final class TelegramCallback
-{
-    private const CALLBACK = TelegramChatPingUid::class;
+    $messenger = $framework->messenger();
 
-    public function getClass(): string
-    {
-        return self::CALLBACK;
-    }
+    $messenger
+        ->transport('telegram-bot')
+        ->dsn('%env(MESSENGER_TRANSPORT_DSN)%')
+        ->options(['queue_name' => 'telegram-bot'])
+        ->retryStrategy()
+        ->maxRetries(5)
+        ->delay(1000)
+        ->maxDelay(0)
+        ->multiplier(3) // увеличиваем задержку перед каждой повторной попыткой
+        ->service(null);
 
-    public function getRole(): string
-    {
-        return 'ROLE_OKSNILWWIY';
-    }
-}
+};

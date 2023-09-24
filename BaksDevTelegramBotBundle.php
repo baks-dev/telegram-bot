@@ -43,7 +43,7 @@ class BaksDevTelegramBotBundle extends AbstractBundle
 				continue;
 			}
 			
-			if($config->isFile() && $config->getFilename() !== 'routes.php')
+			if($config->isFile() && $config->getExtension() === 'php' && $config->getFilename() !== 'routes.php')
 			{
 				$container->import($config->getPathname());
 			}

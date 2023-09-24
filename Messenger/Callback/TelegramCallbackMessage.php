@@ -52,42 +52,6 @@ final class TelegramCallbackMessage
     }
 
 
-    /*public function __construct(string $callback, int $chat, string $data = null)
-    {
-        $call = explode(':', $callback);
-        $class = current($call);
-
-        if(class_exists($class))
-        {
-            $parameter = $call[1] ?? null;
-
-            if($parameter)
-            {
-                try
-                {
-                    $array = json_decode($parameter, false, 512, JSON_THROW_ON_ERROR);
-
-                    if($array)
-                    {
-                        $this->class = new $class(...$array);
-                    }
-
-                } catch(Exception $e)
-                {
-
-                    $this->class = new $class($parameter);
-                }
-            }
-            else
-            {
-                $this->class = new $class();
-            }
-        }
-
-        $this->data = $data;
-        $this->chat = $chat;
-    }*/
-
     /**
      * Class
      */
