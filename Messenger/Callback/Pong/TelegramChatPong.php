@@ -67,8 +67,8 @@ final class TelegramChatPong
             /**
              * Сбрасываем состояние диалога
              */
-            $RedisCache = $this->cache->init('TelegramBot');
-            $RedisCache->delete($message->getChat());
+            $AppCache = $this->cache->init('TelegramBot');
+            $AppCache->delete($message->getChat());
 
         }
     }

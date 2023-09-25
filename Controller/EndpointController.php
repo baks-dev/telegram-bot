@@ -33,6 +33,8 @@ use BaksDev\Telegram\Api\TelegramGetFile;
 use BaksDev\Telegram\Api\TelegramSendMessage;
 use BaksDev\Telegram\Bot\Messenger\Callback\TelegramCallbackMessage;
 use BaksDev\Telegram\Bot\Repository\UsersTableTelegramSettings\GetTelegramBotSettingsInterface;
+use BaksDev\Users\Profile\Group\Repository\ExistRoleByProfile\ExistRoleByProfileInterface;
+use DateInterval;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\Attribute\TaggedIterator;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -86,17 +88,21 @@ final class EndpointController extends AbstractController
         TranslatorInterface $translator,
         LoggerInterface $logger,
         AppCacheInterface $cache,
+        ExistRoleByProfileInterface $existRoleByProfile
     ): Response
     {
 
         $content = json_decode($request->getContent(), true);
+
+        // $logger->critical($request->getContent());
 
         if(!$content)
         {
             return new JsonResponse(['success']);
         }
 
-        $this->cache = $cache->init('TelegramBot');
+        $AppCache = $cache->init('TelegramBot');
+
 
 
         /**
@@ -115,7 +121,13 @@ final class EndpointController extends AbstractController
             $this->text = $content['message']['text'] ?? null; // текст полученного сообщения
         }
 
-        $this->callback = $this->cache->getItem('callback-'.$this->chat)->get();
+
+        $itemCallback = $AppCache->getItem('callback-'.$this->chat);
+        $this->callback = $itemCallback->get();
+
+        $itemIdentifier = $AppCache->getItem('identifier-'.$this->chat);
+        $this->identifier = $itemIdentifier->get();
+
 
         /**
          * Если пользователь кликнул по кнопке
@@ -129,10 +141,9 @@ final class EndpointController extends AbstractController
             {
                 /** Сохраняем идентификатор */
                 $this->identifier = $content['callback_query']['data'];
-                $identifier = $this->cache->getItem('identifier-'.$this->chat);
-                $identifier->set($this->identifier);
-                $identifier->expiresAfter(60 * 60 * 24);
-                $this->cache->save($identifier);
+                $itemIdentifier->set($this->identifier);
+                $itemIdentifier->expiresAfter(DateInterval::createFromDateString('1 day'));
+                $AppCache->save($itemIdentifier);
 
                 $logger->info(sprintf('Пользователь нажал кнопку с идентификатором: %s', $this->identifier), $content);
             }
@@ -144,24 +155,20 @@ final class EndpointController extends AbstractController
             {
                 /** Сохраняем Сallback */
                 $this->callback = $content['callback_query']['data'];
-                $callbackClass = $this->cache->getItem('callback-'.$this->chat);
-                $callbackClass->set($this->callback);
-                $callbackClass->expiresAfter(60 * 60 * 24);
-                $this->cache->save($callbackClass);
+
+                $itemCallback->set($this->callback);
+                $itemCallback->expiresAfter(DateInterval::createFromDateString('1 day'));
+                $AppCache->save($itemCallback);
 
                 $logger->info(sprintf('Пользователь нажал кнопку Callback: %s', $this->callback), $content);
 
                 /** Если класса Callback не существует */
                 if(!class_exists($this->callback))
                 {
-                    return new JsonResponse(['success']);
+                    $this->callback = null;
                 }
             }
         }
-
-
-
-
 
         /**
          * Вызываем меню выбора раздела
@@ -169,20 +176,28 @@ final class EndpointController extends AbstractController
 
         if($this->text === '/start' || empty($this->callback))
         {
-            $this->cache->delete('callback-'.$this->chat);
-            $this->cache->delete('identifier-'.$this->chat);
+            $AppCache->delete('callback-'.$this->chat);
+            $AppCache->delete('identifier-'.$this->chat);
+            $AppCache->delete('fixed-'.$this->identifier);
 
             $menu = null;
 
+
+            /** Получаем роли профиля пользователя */
+
+
             foreach($callback as $call)
             {
-                //if($this->isGranted($call->getRole()) || $this->isGranted('ROLE_ADMIN'))
-                //{
-                $menu[] = [
-                    'text' => $translator->trans($call->getRole().'.name', domain: 'security'),
-                    'callback_data' => $call->getClass(),
-                ];
-                //}
+
+                $isExist = $existRoleByProfile->isExistRole($this->getProfileUid(), $call->getRole());
+
+                if($isExist)
+                {
+                    $menu[] = [
+                        'text' => $translator->trans($call->getRole().'.name', domain: 'security'),
+                        'callback_data' => $call->getClass(),
+                    ];
+                }
             }
 
 
@@ -200,8 +215,6 @@ final class EndpointController extends AbstractController
 
 
                 /** Сбрасываем фиксацию  */
-
-
                 return new JsonResponse(['success']);
             }
 
@@ -212,9 +225,6 @@ final class EndpointController extends AbstractController
 
             return new JsonResponse(['success']);
         }
-
-        $logger->critical($this->callback);
-
 
 
         /**
@@ -245,10 +255,10 @@ final class EndpointController extends AbstractController
                 {
                     /** Сохраняем идентификатор */
                     $this->identifier = $QRdata;
-                    $identifier = $this->cache->getItem('identifier-'.$this->chat);
-                    $identifier->set($this->identifier);
-                    $identifier->expiresAfter(60 * 60 * 24);
-                    $this->cache->save($identifier);
+
+                    $itemIdentifier->set($this->identifier);
+                    $itemIdentifier->expiresAfter(DateInterval::createFromDateString('1 day'));
+                    $AppCache->save($itemIdentifier);
 
                     $logger->info(sprintf('Пользователь отправил QR с идентификатором: %s', $this->identifier), $content);
                 }
@@ -260,12 +270,11 @@ final class EndpointController extends AbstractController
                     ->message('Не можем распознать')
                     ->send(false);
 
-                $this->cache->delete('identifier-'.$this->chat);
+                $AppCache->delete('identifier-'.$this->chat);
 
                 return new JsonResponse(['success']);
             }
         }
-
 
 
         /**
@@ -299,13 +308,13 @@ final class EndpointController extends AbstractController
             $response = $sendMessage
                 ->message($message)
                 ->send();
-            
+
 
             /** Сохраняем последнее сообщение */
-            $lastMessage = $this->cache->getItem('last-'.$this->chat);
+            $lastMessage = $AppCache->getItem('last-'.$this->chat);
             $lastMessage->set($response['result']['message_id']);
-            $lastMessage->expiresAfter(60 * 60 * 24);
-            $this->cache->save($lastMessage);
+            $itemIdentifier->expiresAfter(DateInterval::createFromDateString('1 day'));
+            $AppCache->save($lastMessage);
 
             return new JsonResponse(['success']);
         }
@@ -317,10 +326,7 @@ final class EndpointController extends AbstractController
 
         $instance = $this->callback;
         $callbackClass = new $instance($this->identifier);
-        $messageDispatch->dispatch(
-            new TelegramCallbackMessage($callbackClass, $this->chat, $this->text),
-            transport: 'telegram'
-        );
+        $messageDispatch->dispatch(new TelegramCallbackMessage($callbackClass, $this->chat, $this->text));
 
         return new JsonResponse(['success']);
 

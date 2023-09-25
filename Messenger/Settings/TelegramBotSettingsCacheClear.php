@@ -45,11 +45,11 @@ final class TelegramBotSettingsCacheClear
 
     public function __invoke(TelegramBotSettingsMessage $message)
     {
-        /* Чистим кеш модуля */
-        $cache = $this->cache->init('TelegramBot');
-        $cache->clear();
-
-        $this->messageDispatchLogger->info('Очистили кеш TelegramBot', [__LINE__ => __FILE__]);
+//        /* Чистим кеш модуля */
+//        $cache = $this->cache->init('TelegramBot');
+//        $cache->clear();
+//
+//        $this->messageDispatchLogger->info('Очистили кеш TelegramBot', [__LINE__ => __FILE__]);
 
     }
 }

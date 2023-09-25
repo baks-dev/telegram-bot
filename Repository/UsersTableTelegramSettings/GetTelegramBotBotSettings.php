@@ -80,7 +80,7 @@ final class GetTelegramBotBotSettings implements GetTelegramBotSettingsInterface
         );
 
         /* Кешируем результат ORM */
-        return $qb->enableCache('TelegramBot', 60)->getOneOrNullResult();
+        return $qb->enableCache('Telegram', 60)->getOneOrNullResult();
 
     }
 
@@ -111,7 +111,7 @@ final class GetTelegramBotBotSettings implements GetTelegramBotSettingsInterface
 
 
         /* Кешируем результат DBAL */
-        $settings = $qb->enableCache('TelegramBot', 3600)->fetchAssociative();
+        $settings = $qb->enableCache('Telegram', 3600)->fetchAssociative();
 
         if($settings)
         {
