@@ -25,10 +25,15 @@ declare(strict_types=1);
 
 namespace BaksDev\Telegram\Bot\Type\Settings\Event;
 
+use App\Kernel;
 use BaksDev\Core\Type\UidType\Uid;
+use Symfony\Component\Uid\AbstractUid;
 
 
 final class TelegramBotSettingsEventUid extends Uid
 {
+    public const TEST = '018ad880-dd68-7d5d-b56e-a155d48a91d8';
+
     public const TYPE = 'telegram_bot_settings_event';
+
 }

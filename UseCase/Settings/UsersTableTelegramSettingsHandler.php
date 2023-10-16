@@ -71,42 +71,17 @@ final class UsersTableTelegramSettingsHandler
         {
             /** Ошибка валидации */
             $uniqid = uniqid('', false);
-            $this->logger->error(sprintf('%s: %s', $uniqid, $errors), [__LINE__ => __FILE__]);
+            $this->logger->error(sprintf('%s: %s', $uniqid, $errors), [__FILE__.':'.__LINE__]);
 
             return $uniqid;
         }
 
 
-//        if ($command->getEvent())
-//        {
-//            $EventRepo = $this->entityManager->getRepository(UsersTableTelegramSettingsEvent::class)->find(
-//                $command->getEvent()
-//            );
-//
-//            if ($EventRepo === null)
-//            {
-//                $uniqid = uniqid('', false);
-//                $errorsString = sprintf(
-//                    'Not found %s by id: %s',
-//                    UsersTableTelegramSettingsEvent::class,
-//                    $command->getEvent()
-//                );
-//                $this->logger->error($uniqid.': '.$errorsString);
-//
-//                return $uniqid;
-//            }
-//
-//            $Event = $EventRepo->cloneEntity();
-//        }
-//        else
-//        {
-//
-//        }
-
-
         $this->entityManager->clear();
 
-        $Main = $this->entityManager->getRepository(TelegramBotSettings::class)->find(new UsersTableTelegramSettingsIdentificator());
+        $Main = $this->entityManager
+            ->getRepository(TelegramBotSettings::class)
+            ->find(new UsersTableTelegramSettingsIdentificator());
 
         /* @var TelegramBotSettings $Main */
         if (!$Main)
@@ -121,22 +96,25 @@ final class UsersTableTelegramSettingsHandler
         $Event->setMain($Main);
         $this->entityManager->persist($Event);
 
+        /* присваиваем событие корню */
+        $Main->setEvent($Event);
+
+
         /**
-         * Валидация Event.
+         * Валидация Event
          */
+
         $errors = $this->validator->validate($Event);
 
-        if (count($errors) > 0)
+        if(count($errors) > 0)
         {
             /** Ошибка валидации */
             $uniqid = uniqid('', false);
-            $this->logger->error(sprintf('%s: %s', $uniqid, $errors), [__LINE__ => __FILE__]);
+            $this->logger->error(sprintf('%s: %s', $uniqid, $errors), [__FILE__.':'.__LINE__]);
 
             return $uniqid;
         }
 
-        /* присваиваем событие корню */
-        $Main->setEvent($Event);
 
         /**
          * Валидация Main.
@@ -147,7 +125,7 @@ final class UsersTableTelegramSettingsHandler
         {
             /** Ошибка валидации */
             $uniqid = uniqid('', false);
-            $this->logger->error(sprintf('%s: %s', $uniqid, $errors), [__LINE__ => __FILE__]);
+            $this->logger->error(sprintf('%s: %s', $uniqid, $errors), [__FILE__.':'.__LINE__]);
 
             return $uniqid;
         }

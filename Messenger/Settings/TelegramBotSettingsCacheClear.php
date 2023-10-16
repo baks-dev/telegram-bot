@@ -29,7 +29,7 @@ use BaksDev\Core\Cache\AppCacheInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 
-#[AsMessageHandler(fromTransport: 'sync')]
+#[AsMessageHandler]
 final class TelegramBotSettingsCacheClear
 {
     private AppCacheInterface $cache;
@@ -49,7 +49,7 @@ final class TelegramBotSettingsCacheClear
 //        $cache = $this->cache->init('TelegramBot');
 //        $cache->clear();
 //
-//        $this->messageDispatchLogger->info('Очистили кеш TelegramBot', [__LINE__ => __FILE__]);
+//        $this->messageDispatchLogger->info('Очистили кеш TelegramBot', [__FILE__.':'.__LINE__]);
 
     }
 }

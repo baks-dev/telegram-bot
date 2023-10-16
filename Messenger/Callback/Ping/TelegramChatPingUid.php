@@ -25,7 +25,9 @@ declare(strict_types=1);
 
 namespace BaksDev\Telegram\Bot\Messenger\Callback\Ping;
 
+use App\Kernel;
 use BaksDev\Core\Type\UidType\Uid;
+use Symfony\Component\Uid\AbstractUid;
 
 
 final class TelegramChatPingUid extends Uid
@@ -34,8 +36,4 @@ final class TelegramChatPingUid extends Uid
 
     public const TYPE = 'telegram_chat_ping';
 
-    public function __construct(?string $value = null)
-    {
-        parent::__construct($value);
-    }
 }

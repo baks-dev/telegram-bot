@@ -99,12 +99,12 @@ class TelegramBotSettingsEvent extends EntityEvent
 
     public function __clone()
     {
-        $this->id = new TelegramBotSettingsEventUid();
+        $this->id = clone $this->id;
     }
 
     public function __toString(): string
     {
-        return (string)$this->id;
+        return (string) $this->id;
     }
 
     public function getId(): TelegramBotSettingsEventUid
@@ -125,7 +125,9 @@ class TelegramBotSettingsEvent extends EntityEvent
 
     public function getDto($dto): mixed
     {
-        if($dto instanceof TelegramBotSettingsEventInterface)
+        $dto = is_string($dto) && class_exists($dto) ? new $dto() : $dto;
+
+        if($dto instanceof TelegramBotSettingsEventInterface || $dto instanceof self)
         {
             return parent::getDto($dto);
         }
@@ -135,7 +137,7 @@ class TelegramBotSettingsEvent extends EntityEvent
 
     public function setEntity($dto): mixed
     {
-        if($dto instanceof TelegramBotSettingsEventInterface)
+        if($dto instanceof TelegramBotSettingsEventInterface || $dto instanceof self)
         {
             return parent::setEntity($dto);
         }
