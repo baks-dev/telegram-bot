@@ -60,7 +60,7 @@ final class SettingsController extends AbstractController
 
         // Форма
         $form = $this->createForm(UsersTableTelegramSettingsForm::class, $UsersTableTelegramSettingsDTO, [
-            'action' => $this->generateUrl('TelegramBot:admin.settings'),
+            'action' => $this->generateUrl('telegram-bot:admin.settings'),
         ]);
 
 
@@ -78,7 +78,7 @@ final class SettingsController extends AbstractController
                     ->token($UsersTableTelegramSettingsDTO->getToken())
                     ->secret($UsersTableTelegramSettingsDTO->getSecret())
                     ->connections($UsersTableTelegramSettingsDTO->getConnect())
-                    ->url($this->generateUrl('TelegramBot:telegram.endpoint', [], UrlGeneratorInterface::ABSOLUTE_URL));
+                    ->url($this->generateUrl('telegram-bot:telegram.endpoint', [], UrlGeneratorInterface::ABSOLUTE_URL));
 
                 $telegramSetWebhook->send(false);
 

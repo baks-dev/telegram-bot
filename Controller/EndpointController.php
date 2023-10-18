@@ -101,7 +101,7 @@ final class EndpointController extends AbstractController
             return new JsonResponse(['success']);
         }
 
-        $AppCache = $cache->init('TelegramBot');
+        $AppCache = $cache->init('telegram-bot');
 
 
 

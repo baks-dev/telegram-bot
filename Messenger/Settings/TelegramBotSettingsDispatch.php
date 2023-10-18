@@ -30,26 +30,7 @@ use Psr\Log\LoggerInterface;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 
 #[AsMessageHandler]
-final class TelegramBotSettingsCacheClear
+final class TelegramBotSettingsDispatch
 {
-    private AppCacheInterface $cache;
-    private LoggerInterface $messageDispatchLogger;
-
-    public function __construct(
-        AppCacheInterface $cache,
-        LoggerInterface $messageDispatchLogger,
-    ) {
-        $this->cache = $cache;
-        $this->messageDispatchLogger = $messageDispatchLogger;
-    }
-
-    public function __invoke(TelegramBotSettingsMessage $message)
-    {
-//        /* Чистим кеш модуля */
-//        $cache = $this->cache->init('TelegramBot');
-//        $cache->clear();
-//
-//        $this->messageDispatchLogger->info('Очистили кеш TelegramBot', [__FILE__.':'.__LINE__]);
-
-    }
+    public function __invoke(TelegramBotSettingsMessage $message): void {}
 }

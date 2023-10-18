@@ -38,11 +38,11 @@ return static function(ContainerConfigurator $container, DoctrineConfig $doctrin
 
     $MODULE = substr(__DIR__, 0, strpos(__DIR__, "Resources"));
 
-    $emDefault->mapping('TelegramBot')
+    $emDefault->mapping('telegram-bot')
 		->type('attribute')
 		->dir($MODULE.'Entity')
 		->isBundle(false)
 		->prefix('BaksDev\Telegram\Bot')
-		->alias('TelegramBot')
+		->alias('telegram-bot')
 	;
 };

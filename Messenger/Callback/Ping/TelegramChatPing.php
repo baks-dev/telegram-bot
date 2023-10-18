@@ -68,7 +68,7 @@ final class TelegramChatPing
             /**
              * Сбрасываем состояние диалога
              */
-            $AppCache = $this->cache->init('TelegramBot');
+            $AppCache = $this->cache->init('telegram-bot');
             $AppCache->delete($message->getChat());
         }
     }

@@ -49,7 +49,7 @@ final class Role implements RoleInterface, MenuAdminInterface
     /** Метод возвращает PATH раздела */
     public function getPath(): string
     {
-        return 'TelegramBot:admin.settings';
+        return 'telegram-bot:admin.settings';
     }
 
     /** Метод возвращает секцию, в которую помещается ссылка на раздел */
