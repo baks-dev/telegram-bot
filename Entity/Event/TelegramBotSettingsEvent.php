@@ -144,31 +144,4 @@ class TelegramBotSettingsEvent extends EntityEvent
 
         throw new InvalidArgumentException(sprintf('Class %s interface error', $dto::class));
     }
-
-
-    //	public function isModifyActionEquals(ModifyActionEnum $action) : bool
-    //	{
-    //		return $this->modify->equals($action);
-    //	}
-
-    //	public function getUploadClass() : UsersTableSettingsImage
-    //	{
-    //		return $this->image ?: $this->image = new UsersTableSettingsImage($this);
-    //	}
-
-    //	public function getNameByLocale(Locale $locale) : ?string
-    //	{
-    //		$name = null;
-    //
-    //		/** @var UsersTableSettingsTrans $trans */
-    //		foreach($this->translate as $trans)
-    //		{
-    //			if($name = $trans->name($locale))
-    //			{
-    //				break;
-    //			}
-    //		}
-    //
-    //		return $name;
-    //	}
 }

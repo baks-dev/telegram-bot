@@ -25,7 +25,7 @@ final class UsersTableTelegramSettingsIdentificatorType extends StringType
 {
     public function convertToDatabaseValue($value, AbstractPlatform $platform): mixed
     {
-        return $value instanceof UsersTableTelegramSettingsIdentificator ? $value->getValue() : $value;
+        return (string) $value;
     }
 
     public function convertToPHPValue($value, AbstractPlatform $platform): mixed
