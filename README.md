@@ -36,4 +36,3 @@ $ php bin/phpunit --group=telegram-bot
 
 The MIT License (MIT). Обратитесь к [Файлу лицензии](LICENSE.md) за дополнительной информацией.
 
-
