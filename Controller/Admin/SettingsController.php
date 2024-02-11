@@ -56,7 +56,7 @@ final class SettingsController extends AbstractController
 
         $Settings = $UsersTableTelegramSettingsRepository->getUsersTableTelegramSettingsEvent();
         $UsersTableTelegramSettingsDTO = new TelegramBotSettingsDTO();
-        $Settings->getDto($UsersTableTelegramSettingsDTO);
+        $Settings?->getDto($UsersTableTelegramSettingsDTO);
 
         // Форма
         $form = $this->createForm(UsersTableTelegramSettingsForm::class, $UsersTableTelegramSettingsDTO, [

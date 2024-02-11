@@ -56,7 +56,7 @@ final class GetTelegramBotBotSettings implements GetTelegramBotSettingsInterface
         $this->ORMQueryBuilder = $ORMQueryBuilder;
     }
 
-    public function getUsersTableTelegramSettingsEvent(): TelegramBotSettingsEvent
+    public function getUsersTableTelegramSettingsEvent(): ?TelegramBotSettingsEvent
     {
         $qb = $this->ORMQueryBuilder->createQueryBuilder(self::class);
 
@@ -87,31 +87,30 @@ final class GetTelegramBotBotSettings implements GetTelegramBotSettingsInterface
 
     public function settings(): self|bool
     {
-        $qb = $this->DBALQueryBuilder->createQueryBuilder(self::class);
+        $dbal = $this->DBALQueryBuilder->createQueryBuilder(self::class);
 
-        $qb->select('event.token');
-        $qb->addSelect('event.secret');
+        $dbal
+            ->select('event.token')
+            ->addSelect('event.secret')
+            ->from(TelegramBotSettings::TABLE, 'settings')
+            ->where('settings.id = :identificator')
+        ;
 
-        $qb->from(TelegramBotSettings::TABLE, 'settings');
+        $dbal->setParameter(
+            'identificator',
+            new UsersTableTelegramSettingsIdentificator(),
+            UsersTableTelegramSettingsIdentificator::TYPE
+        );
 
-        $qb->leftJoin(
+        $dbal->leftJoin(
             'settings',
             TelegramBotSettingsEvent::TABLE,
             'event',
             'event.id = settings.event'
         );
 
-        $qb->where('settings.id = :identificator');
-
-        $qb->setParameter(
-            'identificator',
-            new UsersTableTelegramSettingsIdentificator(),
-            UsersTableTelegramSettingsIdentificator::TYPE
-        );
-
-
         /* Кешируем результат DBAL */
-        $settings = $qb->enableCache('telegram', 3600)->fetchAssociative();
+        $settings = $dbal->enableCache('telegram', 3600)->fetchAssociative();
 
         if($settings)
         {

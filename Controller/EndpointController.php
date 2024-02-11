@@ -105,6 +105,9 @@ final class EndpointController extends AbstractController
 
 
 
+
+
+
         /**
          * Определяем идентификатор чата
          */
