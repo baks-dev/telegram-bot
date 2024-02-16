@@ -47,7 +47,7 @@ use Symfony\Contracts\Translation\TranslatorInterface;
 use Zxing\QrReader;
 
 #[AsController]
-#[RoleSecurity('ROLE_USER')]
+//#[RoleSecurity('ROLE_USER')]
 final class EndpointController extends AbstractController
 {
     /**
@@ -91,6 +91,8 @@ final class EndpointController extends AbstractController
         ExistRoleByProfileInterface $existRoleByProfile
     ): Response
     {
+
+        return new JsonResponse(['success']);
 
         $content = json_decode($request->getContent(), true);
 

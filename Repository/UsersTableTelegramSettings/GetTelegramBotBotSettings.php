@@ -49,7 +49,6 @@ final class GetTelegramBotBotSettings implements GetTelegramBotSettingsInterface
     public function __construct(
         DBALQueryBuilder $DBALQueryBuilder,
         ORMQueryBuilder $ORMQueryBuilder,
-
     )
     {
         $this->DBALQueryBuilder = $DBALQueryBuilder;
@@ -110,7 +109,7 @@ final class GetTelegramBotBotSettings implements GetTelegramBotSettingsInterface
         );
 
         /* Кешируем результат DBAL */
-        $settings = $dbal->enableCache('telegram', 3600)->fetchAssociative();
+        $settings = $dbal->enableCache('telegram', 8600)->fetchAssociative();
 
         if($settings)
         {
