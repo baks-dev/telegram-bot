@@ -23,34 +23,26 @@
 
 declare(strict_types=1);
 
-namespace BaksDev\Telegram\Bot\Messenger\Settings;
+namespace BaksDev\Telegram\Bot\Messenger\TelegramEndpointMessage;
 
-use BaksDev\Telegram\Bot\Type\Settings\Event\TelegramBotSettingsEventUid;
+use BaksDev\Auth\Telegram\Type\Event\AccountTelegramEventUid;
+use BaksDev\Telegram\Request\TelegramRequestInterface;
+use BaksDev\Users\User\Type\Id\UserUid;
 
-final class TelegramBotSettingsMessage
+final class TelegramEndpointMessage
 {
+    private TelegramRequestInterface $telegramRequest;
 
-    /** Идентификатор события */
-    private TelegramBotSettingsEventUid $event;
-
-    /** Идентификатор предыдущего события */
-    private ?TelegramBotSettingsEventUid $last;
-
-    public function __construct(TelegramBotSettingsEventUid $event, ?TelegramBotSettingsEventUid $last = null)
+    public function __construct(TelegramRequestInterface $telegramRequest)
     {
-        $this->last = $last;
-        $this->event = $event;
+        $this->telegramRequest = $telegramRequest;
     }
 
-    /** Идентификатор события */
-    public function getEvent(): TelegramBotSettingsEventUid
+    /**
+     * TelegramRequest
+     */
+    public function getTelegramRequest(): TelegramRequestInterface
     {
-        return $this->event;
-    }
-
-    /** Идентификатор предыдущего события */
-    public function getLast(): ?TelegramBotSettingsEventUid
-    {
-        return $this->last;
+        return $this->telegramRequest;
     }
 }

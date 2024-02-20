@@ -32,7 +32,10 @@ use BaksDev\Core\Messenger\MessageDispatchInterface;
 use BaksDev\Telegram\Api\TelegramGetFile;
 use BaksDev\Telegram\Api\TelegramSendMessage;
 use BaksDev\Telegram\Bot\Messenger\Callback\TelegramCallbackMessage;
+use BaksDev\Telegram\Bot\Messenger\TelegramEndpointMessage\TelegramEndpointMessage;
 use BaksDev\Telegram\Bot\Repository\UsersTableTelegramSettings\GetTelegramBotSettingsInterface;
+use BaksDev\Telegram\Request\TelegramRequest;
+use BaksDev\Telegram\Request\TelegramRequestInterface;
 use BaksDev\Users\Profile\Group\Repository\ExistRoleByProfile\ExistRoleByProfileInterface;
 use DateInterval;
 use Psr\Log\LoggerInterface;
@@ -88,9 +91,17 @@ final class EndpointController extends AbstractController
         TranslatorInterface $translator,
         LoggerInterface $logger,
         AppCacheInterface $cache,
-        ExistRoleByProfileInterface $existRoleByProfile
+        ExistRoleByProfileInterface $existRoleByProfile,
+        TelegramRequest $telegramRequest
     ): Response
     {
+        if($telegramRequest->request() instanceof  TelegramRequestInterface)
+        {
+            $messageDispatch->dispatch(
+                new TelegramEndpointMessage($telegramRequest->request()),
+                transport: 'telegram-bot'
+            );
+        }
 
         return new JsonResponse(['success']);
 
@@ -104,10 +115,6 @@ final class EndpointController extends AbstractController
         }
 
         $AppCache = $cache->init('telegram-bot');
-
-
-
-
 
 
         /**
