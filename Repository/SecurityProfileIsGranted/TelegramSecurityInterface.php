@@ -1,6 +1,6 @@
 <?php
 /*
- *  Copyright 2023.  Baks.dev <admin@baks.dev>
+ *  Copyright 2024.  Baks.dev <admin@baks.dev>
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a copy
  *  of this software and associated documentation files (the "Software"), to deal
@@ -21,59 +21,17 @@
  *  THE SOFTWARE.
  */
 
-declare(strict_types=1);
+namespace BaksDev\Telegram\Bot\Repository\SecurityProfileIsGranted;
 
-namespace BaksDev\Telegram\Bot\Messenger\Callback;
+use BaksDev\Core\Type\UidType\ParamConverter;
+use BaksDev\Users\Profile\Group\Type\Prefix\Voter\RoleVoterPrefix;
+use BaksDev\Users\Profile\UserProfile\Type\Id\UserProfileUid;
 
-
-final class TelegramCallbackMessage
+interface TelegramSecurityInterface
 {
-    /**
-     * Callback класс
-     */
-    private ?object $class = null;
-
-    /**
-     * Идентификатор чата
-     */
-    private string $chat;
-
-
-    /**
-     * Текст пользовательского сообщение
-     */
-    private ?string $data;
-
-    public function __construct(mixed $class, int|string $chat, string $data = null)
-    {
-        $this->class = $class;
-        $this->data = $data;
-        $this->chat = (string) $chat;
-    }
-
-
-    /**
-     * Class
-     */
-    public function getClass(): ?object
-    {
-        return $this->class;
-    }
-
-    /**
-     * Data
-     */
-    public function getData(): ?string
-    {
-        return $this->data;
-    }
-
-    /**
-     * Chat
-     */
-    public function getChat(): string
-    {
-        return $this->chat;
-    }
-
+    public function isGrantedProfile(
+        UserProfileUid|string $current,  // Профиль пользователя
+        UserProfileUid|string $authority, // Профиль, кем выдана доверенность
+        RoleVoterPrefix|string $voter
+    ): bool;
 }

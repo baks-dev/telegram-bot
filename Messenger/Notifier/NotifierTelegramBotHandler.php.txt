@@ -39,19 +39,24 @@ final class NotifierTelegramBotHandler
     private int|string $chat;
 
     public function __construct(
-        #[Autowire(env: 'TELEGRAM_NOTIFIER')] int|string $chat = null,
         GetTelegramBotSettingsInterface $telegramBotSettings,
         TelegramSendMessage $sendMessage
     ) {
 
         $this->sendMessage = $sendMessage;
         $this->telegramBotSettings = $telegramBotSettings;
-        $this->chat = $chat;
     }
-
 
     public function __invoke(NotifierTelegramBotMessage $message)
     {
+
+        /** Получаем идентификатор системного администратора */
+
+        return;
+
+
+
+
         $this->telegramBotSettings->settings();
 
         $this->sendMessage
