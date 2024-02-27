@@ -27,13 +27,16 @@ namespace BaksDev\Telegram\Bot\Listeners\Events;
 
 use App\Kernel;
 use BaksDev\Auth\Telegram\Repository\AccountTelegramAdmin\AccountTelegramAdminInterface;
+use BaksDev\Core\Cache\AppCacheInterface;
 use BaksDev\Telegram\Api\TelegramSendMessage;
+use Psr\Cache\CacheItemInterface;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\DependencyInjection\Attribute\When;
 use Symfony\Component\EventDispatcher\Attribute\AsEventListener;
 use Symfony\Component\HttpKernel\Event\ExceptionEvent;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\HttpKernel\KernelEvents;
+use Symfony\Contracts\Cache\CacheInterface;
 
 #[AsEventListener(event: KernelEvents::EXCEPTION)]
 #[When(env: 'prod')]
@@ -42,16 +45,19 @@ final class NotifierExceptionListener
     private TelegramSendMessage $telegramSendMessage;
     private AccountTelegramAdminInterface $accountTelegramAdmin;
     private string $HOST;
+    private CacheInterface $cache;
 
     public function __construct(
         #[Autowire(env: 'HOST')] string $HOST,
         AccountTelegramAdminInterface $accountTelegramAdmin,
-        TelegramSendMessage $telegramSendMessage
+        TelegramSendMessage $telegramSendMessage,
+        AppCacheInterface $cache
     )
     {
         $this->telegramSendMessage = $telegramSendMessage;
         $this->accountTelegramAdmin = $accountTelegramAdmin;
         $this->HOST = $HOST;
+        $this->cache = $cache->init('telegram-bot');
     }
 
 
@@ -73,6 +79,22 @@ final class NotifierExceptionListener
         {
             $Throwable = $event->getThrowable();
 
+
+            /** Кешируем ошибку */
+            $md5 = md5($Throwable->getMessage());
+            /** @var CacheItemInterface $cacheItem */
+            $cacheItem = $this->cache->getItem($md5);
+
+            if($cacheItem->get() === 1)
+            {
+                return;
+            }
+
+            $cacheItem->set(1);
+            $cacheItem->expiresAfter(60);
+            $this->cache->save($cacheItem);
+
+
             $PATH = $Throwable->getFile();
 
             $substring = strstr($Throwable->getFile(), $this->HOST);
@@ -89,8 +111,13 @@ final class NotifierExceptionListener
             $msg .= sprintf('<code>%s:%s</code>', $PATH, $Throwable->getLine());
 
 
+            /** Символ Удалить  */
+            $char = "\u274C";
+            $decoded = json_decode('["'.$char.'"]');
+            $remove = mb_convert_encoding($decoded[0], 'UTF-8');
+
             $menu[] = [
-                'text' => 'Удалить сообщение',
+                'text' => $remove.' Удалить сообщение',
                 'callback_data' => 'telegram-delete-message'
             ];
 
