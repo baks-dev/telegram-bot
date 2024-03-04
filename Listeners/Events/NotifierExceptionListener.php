@@ -63,7 +63,7 @@ final class NotifierExceptionListener
 
     public function onKernelException(ExceptionEvent $event): void
     {
-        if(Kernel::isProdEnvironment() === false)
+        if(Kernel::isDebug() === false)
         {
             return;
         }
@@ -91,9 +91,8 @@ final class NotifierExceptionListener
             }
 
             $cacheItem->set(1);
-            $cacheItem->expiresAfter(60);
+            $cacheItem->expiresAfter(60 * 10);
             $this->cache->save($cacheItem);
-
 
             $PATH = $Throwable->getFile();
 
