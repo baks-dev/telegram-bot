@@ -69,6 +69,9 @@ final class TelegramEndpointHandler
 
     public function __invoke(TelegramEndpointMessage $message): void
     {
+        $this->logger->debug('Telegram Endpoint Handler', [$message]);
+
+        return;
 
     }
 

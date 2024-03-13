@@ -63,7 +63,7 @@ final class NotifierExceptionListener
 
     public function onKernelException(ExceptionEvent $event): void
     {
-        if(Kernel::isDebug() === false)
+        if(Kernel::isDump() === false)
         {
             return;
         }

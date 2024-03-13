@@ -49,7 +49,6 @@ use Symfony\Bundle\SecurityBundle\Security;
 #[AsMessageHandler]
 final class TelegramDeleteMessageHandler
 {
-
     private TelegramDeleteMessage $telegramDeleteMessage;
 
     public function __construct(
