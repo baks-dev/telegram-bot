@@ -23,13 +23,15 @@
 
 namespace BaksDev\Telegram\Bot\Repository\UsersTableTelegramSettings;
 
-interface GetTelegramBotSettingsInterface
+interface TelegramBotSettingsInterface
 {
     public function settings(): self|bool;
 
     public function getToken(): string;
 
     public function getSecret(): string;
+
+    public function getUrl(): ?string;
 
     public function equalsSecret(?string $secret): bool;
 }

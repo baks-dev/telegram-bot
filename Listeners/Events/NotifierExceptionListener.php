@@ -34,7 +34,6 @@ use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\DependencyInjection\Attribute\When;
 use Symfony\Component\EventDispatcher\Attribute\AsEventListener;
 use Symfony\Component\HttpKernel\Event\ExceptionEvent;
-use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\HttpKernel\KernelEvents;
 use Symfony\Contracts\Cache\CacheInterface;
 
@@ -52,8 +51,7 @@ final class NotifierExceptionListener
         AccountTelegramAdminInterface $accountTelegramAdmin,
         TelegramSendMessage $telegramSendMessage,
         AppCacheInterface $cache
-    )
-    {
+    ){
         $this->telegramSendMessage = $telegramSendMessage;
         $this->accountTelegramAdmin = $accountTelegramAdmin;
         $this->HOST = $HOST;
@@ -78,7 +76,6 @@ final class NotifierExceptionListener
         if($chat)
         {
             $Throwable = $event->getThrowable();
-
 
             /** Кешируем ошибку */
             $md5 = md5($Throwable->getMessage());

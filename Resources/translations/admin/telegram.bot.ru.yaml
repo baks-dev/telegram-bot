@@ -1,14 +1,14 @@
 admin:
   page:
-    settings: 'Настрйоки подключения Telegram Bot'
+    settings: 'Настройки подключения Telegram Bot'
 
   breadcrumb:
-    settings: 'Настрйоки подключения Telegram Bot'
+    settings: 'Настройки подключения Telegram Bot'
 
   success:
-    settings: 'Настрйоки подключения Telegram Bot успешно обновлены'
+    settings: 'Настройки подключения Telegram Bot успешно обновлены'
 
   danger:
-    settings: '%s: Ошибка при обновлении настрйоек подключения Telegram Bot'
+    settings: '%s: Ошибка при обновлении настроек подключения Telegram Bot'
 
 

@@ -25,6 +25,7 @@ declare(strict_types=1);
 
 namespace BaksDev\Telegram\Bot\Messenger\TelegramEndpointMessage;
 
+use App\Kernel;
 use BaksDev\Auth\Email\Repository\AccountEventActiveByEmail\AccountEventActiveByEmailInterface;
 use BaksDev\Auth\Email\Type\Email\AccountEmail;
 use BaksDev\Auth\Telegram\Repository\AccountTelegramEvent\AccountTelegramEventInterface;
@@ -70,6 +71,11 @@ final class TelegramEndpointHandler
     public function __invoke(TelegramEndpointMessage $message): void
     {
         $this->logger->debug('Telegram Endpoint Handler', [$message]);
+
+        if(Kernel::isTestEnvironment())
+        {
+            dump(sprintf('TelegramEndpointHandler %s', __FILE__));
+        }
 
         return;
 

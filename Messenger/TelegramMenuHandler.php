@@ -25,6 +25,7 @@ declare(strict_types=1);
 
 namespace BaksDev\Telegram\Bot\Messenger;
 
+use App\Kernel;
 use BaksDev\Auth\Email\Repository\AccountEventActiveByEmail\AccountEventActiveByEmailInterface;
 use BaksDev\Auth\Email\Type\Email\AccountEmail;
 use BaksDev\Auth\Telegram\Repository\AccountTelegramEvent\AccountTelegramEventInterface;
@@ -42,6 +43,8 @@ use BaksDev\Telegram\Request\Type\TelegramRequestIdentifier;
 use BaksDev\Telegram\Request\Type\TelegramRequestMessage;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
+use Symfony\Component\Routing\Generator\UrlGenerator;
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 use Symfony\Contracts\Cache\CacheInterface;
 use Symfony\Bundle\SecurityBundle\Security;
@@ -51,14 +54,17 @@ final class TelegramMenuHandler
 {
     private $security;
     private TelegramSendMessage $telegramSendMessage;
+    private UrlGeneratorInterface $urlGenerator;
 
     public function __construct(
         Security $security,
         TelegramSendMessage $telegramSendMessage,
+        UrlGeneratorInterface $urlGenerator
     )
     {
         $this->security = $security;
         $this->telegramSendMessage = $telegramSendMessage;
+        $this->urlGenerator = $urlGenerator;
     }
 
 
@@ -67,27 +73,48 @@ final class TelegramMenuHandler
      */
     public function __invoke(TelegramEndpointMessage $message): void
     {
+        if(Kernel::isTestEnvironment())
+        {
+            return;
+        }
+
         /** @var TelegramRequestMessage $TelegramRequest */
         $TelegramRequest = $message->getTelegramRequest();
 
-        if(!($TelegramRequest instanceof TelegramRequestMessage) || $TelegramRequest->getText() !== '/menu')
+        if(!($TelegramRequest instanceof TelegramRequestMessage) || $TelegramRequest->getText() !== '/start')
         {
             return;
         }
 
         if(!$this->security->isGranted('ROLE_USER'))
         {
+            $menu[] = [
+                'text' => 'Регистрация по QR',
+                'url' => $this->urlGenerator->generate('auth-telegram:user.auth', referenceType: UrlGeneratorInterface::ABSOLUTE_URL)
+            ];
+
+            $markup = json_encode([
+                'inline_keyboard' => array_chunk($menu, 1),
+            ]);
+
+            if(Kernel::isTestEnvironment())
+            {
+                $markup = null;
+            }
+
+            $TelegramRequest->getSystem() ? $delete[] = $TelegramRequest->getSystem() : false;
+            $TelegramRequest->getId() ? $delete[] = $TelegramRequest->getSystem() : false;
+
             $this
                 ->telegramSendMessage
                 ->chanel($TelegramRequest->getChatId())
-                ->delete([
-                    $TelegramRequest->getSystem(),
-                    $TelegramRequest->getId(),
-                ])
-                ->message('Отправьте свой E-mail, с которого Вы регистрировались')
+                ->delete($delete)
+                ->message('Отправьте свой <b>E-mail</b>, с которого Вы регистрировались для привязки к существующему аккаунту, либо зарегистрируйтесь с помощью <b>QR-кода</b> на странице регистрации ')
+                ->markup($markup)
                 ->send();
+
+            $message->complete();
         }
     }
-
 }
 

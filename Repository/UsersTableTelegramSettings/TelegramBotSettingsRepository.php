@@ -31,8 +31,11 @@ use BaksDev\Telegram\Bot\Entity\Event\TelegramBotSettingsEvent;
 use BaksDev\Telegram\Bot\Entity\TelegramBotSettings;
 use BaksDev\Telegram\Bot\Type\Settings\Id\UsersTableTelegramSettingsIdentificator;
 
-final class GetTelegramBotBotSettings implements GetTelegramBotSettingsInterface
+final class TelegramBotSettingsRepository implements TelegramBotSettingsInterface
 {
+
+    private ?string $url = null;
+
     /**
      * Токен авторизации Telegram-бота.
      */
@@ -46,6 +49,8 @@ final class GetTelegramBotBotSettings implements GetTelegramBotSettingsInterface
     private DBALQueryBuilder $DBALQueryBuilder;
     private ORMQueryBuilder $ORMQueryBuilder;
 
+
+
     public function __construct(
         DBALQueryBuilder $DBALQueryBuilder,
         ORMQueryBuilder $ORMQueryBuilder,
@@ -55,31 +60,30 @@ final class GetTelegramBotBotSettings implements GetTelegramBotSettingsInterface
         $this->ORMQueryBuilder = $ORMQueryBuilder;
     }
 
-    public function getUsersTableTelegramSettingsEvent(): ?TelegramBotSettingsEvent
+    public function getCurrentTelegramSettingsEvent(): ?TelegramBotSettingsEvent
     {
-        $qb = $this->ORMQueryBuilder->createQueryBuilder(self::class);
+        $orm = $this->ORMQueryBuilder->createQueryBuilder(self::class);
 
-        $qb->select('event');
+        $orm
+            ->from(TelegramBotSettings::class, 'settings')
+            ->where('settings.id = :identificator')
+            ->setParameter(
+                'identificator',
+                new UsersTableTelegramSettingsIdentificator(),
+                UsersTableTelegramSettingsIdentificator::TYPE
+            );
 
-        $qb->from(TelegramBotSettings::class, 'settings');
-
-        $qb->where('settings.id = :identificator');
-
-        $qb->setParameter(
-            'identificator',
-            new UsersTableTelegramSettingsIdentificator(),
-            UsersTableTelegramSettingsIdentificator::TYPE
-        );
-
-        $qb->leftJoin(
-            TelegramBotSettingsEvent::class,
-            'event',
-            'WITH',
-            'event.id = settings.event'
-        );
+        $orm
+            ->select('event')
+            ->leftJoin(
+                TelegramBotSettingsEvent::class,
+                'event',
+                'WITH',
+                'event.id = settings.event'
+            );
 
         /* Кешируем результат ORM */
-        return $qb->enableCache('telegram', 60)->getOneOrNullResult();
+        return $orm->enableCache('telegram', 60)->getOneOrNullResult();
 
     }
 
@@ -91,9 +95,9 @@ final class GetTelegramBotBotSettings implements GetTelegramBotSettingsInterface
         $dbal
             ->select('event.token')
             ->addSelect('event.secret')
-            ->from(TelegramBotSettings::TABLE, 'settings')
-            ->where('settings.id = :identificator')
-        ;
+            ->addSelect('event.url')
+            ->from(TelegramBotSettings::class, 'settings')
+            ->where('settings.id = :identificator');
 
         $dbal->setParameter(
             'identificator',
@@ -109,12 +113,13 @@ final class GetTelegramBotBotSettings implements GetTelegramBotSettingsInterface
         );
 
         /* Кешируем результат DBAL */
-        $settings = $dbal->enableCache('telegram', 8600)->fetchAssociative();
+        $settings = $dbal->enableCache('telegram', 60)->fetchAssociative();
 
         if($settings)
         {
             $this->token = $settings['token'];
             $this->secret = $settings['secret'];
+            $this->url = $settings['url'];
 
             return $this;
         }
@@ -149,5 +154,13 @@ final class GetTelegramBotBotSettings implements GetTelegramBotSettingsInterface
         }
 
         return $this->secret === $secret;
+    }
+
+    /**
+     * Url
+     */
+    public function getUrl(): ?string
+    {
+        return $this->url;
     }
 }

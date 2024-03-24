@@ -31,18 +31,27 @@ use BaksDev\Users\Profile\Group\Entity\ProfileGroup;
 use BaksDev\Users\Profile\Group\Entity\Role\ProfileRole;
 use BaksDev\Users\Profile\Group\Entity\Role\Voter\ProfileVoter;
 use BaksDev\Users\Profile\Group\Entity\Users\ProfileGroupUsers;
+use BaksDev\Users\Profile\Group\Repository\ExistProfileGroup\ExistProfileGroupInterface;
+use BaksDev\Users\Profile\Group\Repository\ProfileGroup\ProfileGroupByUserProfileInterface;
+use BaksDev\Users\Profile\Group\Type\Prefix\Group\GroupPrefix;
 use BaksDev\Users\Profile\Group\Type\Prefix\Voter\RoleVoterPrefix;
 use BaksDev\Users\Profile\UserProfile\Type\Id\UserProfileUid;
 
 final class TelegramSecurity implements TelegramSecurityInterface
 {
     private DBALQueryBuilder $DBALQueryBuilder;
+    private ExistProfileGroupInterface $existProfileGroup;
+    private ProfileGroupByUserProfileInterface $profileGroupByUserProfile;
 
     public function __construct(
         DBALQueryBuilder $DBALQueryBuilder,
+        ExistProfileGroupInterface $existProfileGroup,
+        ProfileGroupByUserProfileInterface $profileGroupByUserProfile,
     )
     {
         $this->DBALQueryBuilder = $DBALQueryBuilder;
+        $this->existProfileGroup = $existProfileGroup;
+        $this->profileGroupByUserProfile = $profileGroupByUserProfile;
     }
 
     /**
@@ -65,25 +74,36 @@ final class TelegramSecurity implements TelegramSecurityInterface
 
         $dbal = $this->DBALQueryBuilder->createQueryBuilder(self::class);
 
-        /** Получаем группы профиля сущности */
         $dbal
-            ->from(ProfileGroup::class, 'profile_group')
-            ->where('profile_group.profile = :authority')
-            ->setParameter('authority', $authority, UserProfileUid::TYPE);
-
-        /** Получаем доверенность текущего профиля */
-        $dbal
-            ->join(
-                'profile_group',
-                ProfileGroupUsers::class,
-                'profile_group_users',
-                'profile_group_users.prefix = profile_group.prefix AND profile_group_users.profile = :current'
-
-            )
+            ->select('profile_group_users.prefix AS profile_group_users')
+            ->from(ProfileGroupUsers::class, 'profile_group_users')
+            ->where('profile_group_users.profile = :current')
             ->setParameter('current', $current, UserProfileUid::TYPE);
 
+        if(false === $authority->equals($current))
+        {
+            $dbal->join(
+                'profile_group_users',
+                ProfileGroup::class,
+                'profile_group',
+                'profile_group.prefix = profile_group_users.prefix AND profile_group.profile = :authority'
+            )
+                ->setParameter('authority', $authority, UserProfileUid::TYPE);
+        }
+        else
+        {
+            $dbal->leftJoin(
+                'profile_group_users',
+                ProfileGroup::class,
+                'profile_group',
+                'profile_group.prefix = profile_group_users.prefix'
+            );
+
+            $dbal->andWhere('profile_group_users.authority IS NULL');
+        }
+
         $dbal
-            ->join(
+            ->leftJoin(
                 'profile_group',
                 ProfileRole::class,
                 'profile_group_role',
@@ -92,6 +112,7 @@ final class TelegramSecurity implements TelegramSecurityInterface
             );
 
         $dbal
+            ->addSelect('profile_group_voter.prefix AS profile_group_voter_prefix')
             ->join(
                 'profile_group_role',
                 ProfileVoter::class,
@@ -100,7 +121,197 @@ final class TelegramSecurity implements TelegramSecurityInterface
             )
             ->setParameter('voter', $voter, RoleVoterPrefix::TYPE);
 
+        $dbal->setMaxResults(1);
 
-        return $dbal->enableCache('')->fetchExist();
+        $roles = $dbal->enableCache('telegram-bot', 3600)->fetchAssociative();
+
+        if(empty($roles))
+        {
+            return false;
+        }
+
+        if($roles['profile_group_users'] === 'ROLE_ADMIN')
+        {
+            return true;
+        }
+
+        return $voter->equals($roles['profile_group_voter_prefix']);
+
     }
+
+    public function isGranted(UserProfileUid|string $profile, string $role, UserProfileUid|string|null $authority = null): bool
+    {
+        if(!class_exists(BaksDevUsersProfileGroupBundle::class))
+        {
+            return false;
+        }
+
+        $profile = is_string($profile) ? new UserProfileUid($profile) : $profile;
+        $authority = is_string($authority) ? new UserProfileUid($authority) : $authority;
+
+        /** Проверяем, имеется ли у пользователя группа либо доверенность */
+        $existGroup = $this->existProfileGroup->isExistsProfileGroup($profile);
+
+        if($existGroup)
+        {
+            /** Получаем префикс группы профиля
+             * $authority = false - если администратор ресурса
+             * */
+            $group = $this->profileGroupByUserProfile
+                ->findProfileGroupByUserProfile($profile, $authority);
+
+            if($group)
+            {
+                if($group->equals('ROLE_ADMIN'))
+                {
+                    return true;
+                }
+
+                /** Получаем список ролей и правил группы */
+                $qb = $this->DBALQueryBuilder->createQueryBuilder(self::class);
+
+                $qb->select("
+                   ARRAY(SELECT DISTINCT UNNEST(
+                        ARRAY_AGG(profile_role.prefix) || 
+                        ARRAY_AGG(profile_voter.prefix)
+                    )) AS roles
+                ");
+
+                $qb->from(ProfileGroup::TABLE, 'profile_group');
+
+                $qb->leftJoin(
+                    'profile_group',
+                    ProfileRole::TABLE,
+                    'profile_role',
+                    'profile_role.event = profile_group.event'
+                );
+
+                $qb->leftJoin(
+                    'profile_role',
+                    ProfileVoter::TABLE,
+                    'profile_voter',
+                    'profile_voter.role = profile_role.id'
+                );
+
+                $qb->andWhere('profile_group.prefix = :prefix')
+                    ->setParameter('prefix', $group, GroupPrefix::TYPE);
+
+                $qb->andWhere('profile_role.prefix IS NOT NULL');
+                $qb->andWhere('profile_voter.prefix IS NOT NULL');
+
+
+                if($authority)
+                {
+                    $qb->andWhere('profile_group.profile = :authority')
+                        ->setParameter('authority', $authority, UserProfileUid::TYPE);
+                }
+
+                $roles = $qb
+                    ->enableCache('telegram-bot', 60)
+                    ->fetchOne();
+
+                if($roles)
+                {
+                    $roles = trim($roles, "{}");
+
+                    if(empty($roles))
+                    {
+                        return false;
+                    }
+
+                    $roles = explode(",", $roles);
+
+                    $roles[] = 'ROLE_USER';
+                }
+
+                $roles = array_filter($roles);
+
+                return in_array($role, $roles);
+            }
+        }
+
+        return false;
+    }
+
+    public function isExistGranted(UserProfileUid|string $profile, string $role) : bool
+    {
+        if(!class_exists(BaksDevUsersProfileGroupBundle::class))
+        {
+            return false;
+        }
+
+        $profile = is_string($profile) ? new UserProfileUid($profile) : $profile;
+
+        /** Проверяем, имеется ли у пользователя группа либо доверенность */
+        $existGroup = $this->existProfileGroup->isExistsProfileGroup($profile);
+
+        if($existGroup)
+        {
+            /** Получаем префикс группы профиля
+             * $authority = false - если администратор ресурса
+             * */
+            $group = $this->profileGroupByUserProfile
+                ->findProfileGroupByUserProfile($profile, false);
+
+            if($group)
+            {
+                /** Получаем список ролей и правил группы */
+                $qb = $this->DBALQueryBuilder->createQueryBuilder(self::class);
+
+                $qb->select("
+                   ARRAY(SELECT DISTINCT UNNEST(
+                        ARRAY_AGG(profile_role.prefix) || 
+                        ARRAY_AGG(profile_voter.prefix)
+                    )) AS roles
+                ");
+
+                $qb->from(ProfileGroup::TABLE, 'profile_group');
+
+                $qb->leftJoin(
+                    'profile_group',
+                    ProfileRole::TABLE,
+                    'profile_role',
+                    'profile_role.event = profile_group.event'
+                );
+
+                $qb->leftJoin(
+                    'profile_role',
+                    ProfileVoter::TABLE,
+                    'profile_voter',
+                    'profile_voter.role = profile_role.id'
+                );
+
+                $qb->andWhere('profile_group.prefix = :prefix')
+                    ->setParameter('prefix', $group, GroupPrefix::TYPE);
+
+                $qb->andWhere('profile_role.prefix IS NOT NULL');
+                $qb->andWhere('profile_voter.prefix IS NOT NULL');
+
+                $roles = $qb
+                    ->enableCache('telegram-bot', 60)
+                    ->fetchOne();
+
+                if($roles)
+                {
+                    $roles = trim($roles, "{}");
+
+                    if(empty($roles))
+                    {
+                        return false;
+                    }
+
+                    $roles = explode(",", $roles);
+
+                    $roles[] = 'ROLE_USER';
+                }
+
+                $roles = array_filter($roles);
+
+                return in_array($role, $roles);
+            }
+        }
+
+        return false;
+    }
+
 }

@@ -1,5 +1,11 @@
+{% trans_default_domain 'telegram.bot' %}
+
 {# ---- ШАБЛОН ------------------------------------------------------------ #}
 {% extends Template('/admin/base.html.twig') %}
+
+{% block title %}
+	{{ 'admin.page.settings'|trans }}
+{% endblock %}
 
 {# ---- КОНТЕНТ-БЛОК ------------------------------------------------------------ #}
 {% block content %}

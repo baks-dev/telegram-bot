@@ -29,7 +29,7 @@ use BaksDev\Core\Controller\AbstractController;
 use BaksDev\Core\Listeners\Event\Security\RoleSecurity;
 use BaksDev\Telegram\Api\Webhook\TelegramSetWebhook;
 use BaksDev\Telegram\Bot\Entity\TelegramBotSettings;
-use BaksDev\Telegram\Bot\Repository\UsersTableTelegramSettings\GetTelegramBotSettingsInterface;
+use BaksDev\Telegram\Bot\Repository\UsersTableTelegramSettings\TelegramBotSettingsInterface;
 use BaksDev\Telegram\Bot\UseCase\Settings\TelegramBotSettingsDTO;
 use BaksDev\Telegram\Bot\UseCase\Settings\UsersTableTelegramSettingsForm;
 use BaksDev\Telegram\Bot\UseCase\Settings\UsersTableTelegramSettingsHandler;
@@ -48,13 +48,13 @@ final class SettingsController extends AbstractController
     public function edit(
         Request $request,
         TelegramSetWebhook $telegramSetWebhook,
-        GetTelegramBotSettingsInterface $UsersTableTelegramSettingsRepository,
+        TelegramBotSettingsInterface $UsersTableTelegramSettingsRepository,
         UsersTableTelegramSettingsHandler $UsersTableTelegramSettingsHandler,
     ): Response
     {
         //#[MapEntity] UsersTableTelegramSettingsEvent $UsersTableTelegramSettingsEvent,
 
-        $Settings = $UsersTableTelegramSettingsRepository->getUsersTableTelegramSettingsEvent();
+        $Settings = $UsersTableTelegramSettingsRepository->getCurrentTelegramSettingsEvent();
         $UsersTableTelegramSettingsDTO = new TelegramBotSettingsDTO();
         $Settings?->getDto($UsersTableTelegramSettingsDTO);
 

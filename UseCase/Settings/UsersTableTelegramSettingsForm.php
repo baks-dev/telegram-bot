@@ -38,8 +38,13 @@ final class UsersTableTelegramSettingsForm extends AbstractType
 {
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
+        $builder->add('url',
+            TextType::class,
+            ['help' => 'Пример: https://t.me/MyTelegramBot']
+        );
+
         $builder->add('token', TextType::class);
-        
+
         $builder->get('token')->addModelTransformer(
             new CallbackTransformer(
                 function($token) {

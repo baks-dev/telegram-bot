@@ -37,6 +37,13 @@ final class TelegramBotSettingsDTO implements TelegramBotSettingsEventInterface
     private ?TelegramBotSettingsEventUid $id = null;
 
     /**
+     * Ссылка Telegram-бота
+     */
+    #[Assert\NotBlank]
+    #[Assert\Url]
+    private string $url;
+
+    /**
      * Токен авторизации Telegram-бота.
      */
     #[Assert\NotBlank]
@@ -105,4 +112,20 @@ final class TelegramBotSettingsDTO implements TelegramBotSettingsEventInterface
     {
         $this->connect = $connect;
     }
+
+    /**
+     * Url
+     */
+    public function getUrl(): string
+    {
+        return $this->url;
+    }
+
+    public function setUrl(string $url): self
+    {
+        $this->url = $url;
+        return $this;
+    }
+
+
 }

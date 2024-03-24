@@ -69,6 +69,13 @@ class TelegramBotSettingsEvent extends EntityEvent
 
 
     /**
+     * Ссылка Telegram-бота
+     */
+    #[Assert\NotBlank]
+    #[ORM\Column(type: Types::STRING, nullable: true)]
+    private string $url;
+
+    /**
      * Токен авторизации Telegram-бота
      */
     #[Assert\NotBlank]

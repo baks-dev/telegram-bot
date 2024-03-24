@@ -31,7 +31,7 @@ use BaksDev\Users\User\Type\Id\UserUid;
 
 final class TelegramEndpointMessage
 {
-    private TelegramRequestInterface $telegramRequest;
+    private ?TelegramRequestInterface $telegramRequest = null;
 
     public function __construct(TelegramRequestInterface $telegramRequest)
     {
@@ -41,8 +41,14 @@ final class TelegramEndpointMessage
     /**
      * TelegramRequest
      */
-    public function getTelegramRequest(): TelegramRequestInterface
+    public function getTelegramRequest(): ?TelegramRequestInterface
     {
         return $this->telegramRequest;
+    }
+
+    /** Метод сбрасывает TelegramRequest */
+    public function complete(): void
+    {
+        $this->telegramRequest = null;
     }
 }
