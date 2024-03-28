@@ -81,7 +81,7 @@ final class TelegramMenuHandler
         /** @var TelegramRequestMessage $TelegramRequest */
         $TelegramRequest = $message->getTelegramRequest();
 
-        if(!($TelegramRequest instanceof TelegramRequestMessage) || $TelegramRequest->getText() !== '/start')
+        if(!($TelegramRequest instanceof TelegramRequestMessage) || $TelegramRequest->getText() !== '/menu')
         {
             return;
         }
@@ -105,11 +105,15 @@ final class TelegramMenuHandler
             $TelegramRequest->getSystem() ? $delete[] = $TelegramRequest->getSystem() : false;
             $TelegramRequest->getId() ? $delete[] = $TelegramRequest->getSystem() : false;
 
+            $msg = '<b>Не удалось убедиться, что этот аккаунт принадлежит Вам.</b>'.PHP_EOL;
+            $msg .= PHP_EOL;
+            $msg .= 'Отправьте свой <b>E-mail</b>, с которого Вы регистрировались для привязки к существующему аккаунту, либо зарегистрируйтесь с помощью <b>QR-кода</b> на странице регистрации.';
+
             $this
                 ->telegramSendMessage
                 ->chanel($TelegramRequest->getChatId())
                 ->delete($delete)
-                ->message('Отправьте свой <b>E-mail</b>, с которого Вы регистрировались для привязки к существующему аккаунту, либо зарегистрируйтесь с помощью <b>QR-кода</b> на странице регистрации ')
+                ->message($msg)
                 ->markup($markup)
                 ->send();
 
