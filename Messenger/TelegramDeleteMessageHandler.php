@@ -77,6 +77,8 @@ final class TelegramDeleteMessageHandler
             ->delete($TelegramRequest->getId())
             ->send()
         ;
+
+        $message->complete();
     }
 }
 

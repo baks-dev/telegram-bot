@@ -25,11 +25,13 @@ declare(strict_types=1);
 
 namespace BaksDev\Telegram\Bot\Controller;
 
+use BaksDev\Core\Cache\AppCacheInterface;
 use BaksDev\Core\Controller\AbstractController;
 use BaksDev\Core\Messenger\MessageDispatchInterface;
 use BaksDev\Telegram\Bot\Messenger\TelegramEndpointMessage\TelegramEndpointMessage;
 use BaksDev\Telegram\Request\TelegramRequest;
 use BaksDev\Telegram\Request\TelegramRequestInterface;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Attribute\AsController;

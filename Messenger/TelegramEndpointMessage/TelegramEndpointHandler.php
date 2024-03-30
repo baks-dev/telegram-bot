@@ -46,7 +46,7 @@ use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 use Symfony\Contracts\Cache\CacheInterface;
 use Symfony\Bundle\SecurityBundle\Security;
 
-#[AsMessageHandler]
+#[AsMessageHandler(priority: -999)]
 final class TelegramEndpointHandler
 {
     private $security;
@@ -70,7 +70,19 @@ final class TelegramEndpointHandler
 
     public function __invoke(TelegramEndpointMessage $message): void
     {
-        $this->logger->debug('Telegram Endpoint Handler', [$message]);
+        $TelegramRequest = $message->getTelegramRequest();
+
+        if($TelegramRequest !== null)
+        {
+            $this
+                ->telegramSendMessage
+                ->chanel($TelegramRequest->getChatId())
+                ->message('Здравствуйте! Напишите, чем я могу вам помочь?')
+                ->send()
+            ;
+        }
+
+        $this->logger->debug(self::class, [$message]);
 
         if(Kernel::isTestEnvironment())
         {
@@ -78,7 +90,6 @@ final class TelegramEndpointHandler
         }
 
         return;
-
     }
 
     public function invoke(TelegramEndpointMessage $message): void
