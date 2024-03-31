@@ -72,7 +72,7 @@ final class TelegramEndpointHandler
     {
         $TelegramRequest = $message->getTelegramRequest();
 
-        if($TelegramRequest !== null)
+        if($TelegramRequest instanceof TelegramRequestMessage)
         {
             $this
                 ->telegramSendMessage
