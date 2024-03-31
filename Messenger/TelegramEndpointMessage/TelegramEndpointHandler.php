@@ -46,142 +46,35 @@ use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 use Symfony\Contracts\Cache\CacheInterface;
 use Symfony\Bundle\SecurityBundle\Security;
 
+
 #[AsMessageHandler(priority: -999)]
 final class TelegramEndpointHandler
 {
-    private $security;
-    private LoggerInterface $logger;
     private TelegramSendMessage $telegramSendMessage;
-    private TelegramDeleteMessage $deleteMessage;
 
-    public function __construct(
-        LoggerInterface $telegramBotLogger,
-        Security $security,
-        TelegramSendMessage $telegramSendMessage,
-        TelegramDeleteMessage $deleteMessage
-    )
+    public function __construct(TelegramSendMessage $telegramSendMessage)
     {
-        $this->security = $security;
-        $this->logger = $telegramBotLogger;
         $this->telegramSendMessage = $telegramSendMessage;
-        $this->deleteMessage = $deleteMessage;
     }
 
-
+    /** В случае, если никакой из хендлеров не отработал - отправляем сообщение с вопросом */
     public function __invoke(TelegramEndpointMessage $message): void
     {
         $TelegramRequest = $message->getTelegramRequest();
 
         if($TelegramRequest instanceof TelegramRequestMessage)
         {
+            if(in_array($TelegramRequest->getText(), ['menu', '/menu', 'start', '/start']))
+            {
+                return;
+            }
+
             $this
                 ->telegramSendMessage
                 ->chanel($TelegramRequest->getChatId())
                 ->message('Здравствуйте! Напишите, чем я могу вам помочь?')
                 ->send()
             ;
-        }
-
-        $this->logger->debug(self::class, [$message]);
-
-        if(Kernel::isTestEnvironment())
-        {
-            dump(sprintf('TelegramEndpointHandler %s', __FILE__));
-        }
-
-        return;
-    }
-
-    public function invoke(TelegramEndpointMessage $message): void
-    {
-        if(!$this->security->isGranted('ROLE_ADMIN'))
-        {
-            $this->logger->warning('Пользователь не имеет прав');
-        }
-
-        $TelegramRequest = $message->getTelegramRequest();
-
-        $this
-            ->telegramSendMessage
-            ->chanel($TelegramRequest->getChatId());
-
-        $this->deleteMessage->chanel($TelegramRequest->getChatId());
-
-
-        if($TelegramRequest instanceof TelegramRequestMessage)
-        {
-            $this->logger->debug('TelegramRequestMessage', [
-                $TelegramRequest->getText()
-            ]);
-
-            //$this->deleteMessage->delete($TelegramRequest->getSystem())->send();
-
-//            $this
-//                ->telegramSendMessage
-//                ->delete([
-//                    $TelegramRequest->getId(),
-//                    $TelegramRequest->getLast(),
-//                    $TelegramRequest->getSystem()
-//                ])
-//                ->message($TelegramRequest->getText())
-//                ->send()
-//            ;
-        }
-
-        if($TelegramRequest instanceof TelegramRequestIdentifier)
-        {
-            $this->logger->debug('TelegramRequestIdentifier', [
-                'id' =>  $TelegramRequest->getIdentifier(),
-                'last' => $TelegramRequest->getLast(),
-                'system' => $TelegramRequest->getSystem(),
-            ]);
-
-            //$this->deleteMessage->delete($TelegramRequest->getSystem())->send();
-
-            $menu[] = [
-                'text' => 'Кнопка',
-                'callback_data' => 'cancel|018dacc1-ccf0-73cc-b573-fe10d3863d9e'
-            ];
-
-            $markup = json_encode([
-                'inline_keyboard' => array_chunk($menu, 1),
-            ]);
-
-
-            $this
-                ->telegramSendMessage
-                ->delete([
-                    //$TelegramRequest->getLast(),
-                    $TelegramRequest->getSystem(),
-                    $TelegramRequest->getId(),
-                ])
-                ->message($TelegramRequest->getIdentifier(). ' - ' .$TelegramRequest->getId())
-                ->markup($markup)
-                ->send()
-            ;
-        }
-
-        if($TelegramRequest instanceof TelegramRequestCallback)
-        {
-            $this->logger->debug('TelegramRequestCallback', [
-                'last' => $TelegramRequest->getLast(),
-                'system' => $TelegramRequest->getSystem(),
-                'call' => $TelegramRequest->getCall(),
-                'id' => $TelegramRequest->getIdentifier(),
-            ]);
-
-
-            $this
-                ->telegramSendMessage
-                ->delete([
-                    $TelegramRequest->getLast(),
-                    $TelegramRequest->getSystem(),
-                    //$TelegramRequest->getId(),
-                ])
-                ->message($TelegramRequest->getCall(). ' - ' .$TelegramRequest->getIdentifier())
-                ->send()
-            ;
-
         }
     }
 }
