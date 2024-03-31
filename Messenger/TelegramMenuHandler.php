@@ -29,6 +29,7 @@ use App\Kernel;
 use BaksDev\Auth\Email\Repository\AccountEventActiveByEmail\AccountEventActiveByEmailInterface;
 use BaksDev\Auth\Email\Type\Email\AccountEmail;
 use BaksDev\Auth\Telegram\Repository\AccountTelegramEvent\AccountTelegramEventInterface;
+use BaksDev\Auth\Telegram\Repository\ActiveProfileByAccountTelegram\ActiveProfileByAccountTelegramInterface;
 use BaksDev\Auth\Telegram\Type\Status\AccountTelegramStatus\Collection\AccountTelegramStatusCollection;
 use BaksDev\Auth\Telegram\UseCase\Admin\NewEdit\AccountTelegramDTO;
 use BaksDev\Auth\Telegram\UseCase\Admin\NewEdit\AccountTelegramHandler;
@@ -42,6 +43,7 @@ use BaksDev\Telegram\Request\Type\TelegramRequestCallback;
 use BaksDev\Telegram\Request\Type\TelegramRequestIdentifier;
 use BaksDev\Telegram\Request\Type\TelegramRequestMessage;
 use Psr\Log\LoggerInterface;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 use Symfony\Component\Routing\Generator\UrlGenerator;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
@@ -49,22 +51,25 @@ use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 use Symfony\Contracts\Cache\CacheInterface;
 use Symfony\Bundle\SecurityBundle\Security;
 
-#[AsMessageHandler]
+#[AsMessageHandler(priority: 999)]
 final class TelegramMenuHandler
 {
-    private $security;
     private TelegramSendMessage $telegramSendMessage;
     private UrlGeneratorInterface $urlGenerator;
+    private ActiveProfileByAccountTelegramInterface $activeProfileByAccountTelegram;
+    private string $HOST;
 
     public function __construct(
-        Security $security,
+        #[Autowire(env: 'HOST')] string $HOST,
         TelegramSendMessage $telegramSendMessage,
-        UrlGeneratorInterface $urlGenerator
+        UrlGeneratorInterface $urlGenerator,
+        ActiveProfileByAccountTelegramInterface $activeProfileByAccountTelegram,
     )
     {
-        $this->security = $security;
+        $this->HOST = $HOST;
         $this->telegramSendMessage = $telegramSendMessage;
         $this->urlGenerator = $urlGenerator;
+        $this->activeProfileByAccountTelegram = $activeProfileByAccountTelegram;
     }
 
 
@@ -86,39 +91,45 @@ final class TelegramMenuHandler
             return;
         }
 
-        if(!$this->security->isGranted('ROLE_USER'))
+        $profile = $this->activeProfileByAccountTelegram->findByChat($TelegramRequest->getChatId());
+
+        if($profile !== null)
         {
-            $menu[] = [
-                'text' => 'Регистрация по QR',
-                'url' => $this->urlGenerator->generate('auth-telegram:user.auth', referenceType: UrlGeneratorInterface::ABSOLUTE_URL)
-            ];
-
-            $markup = json_encode([
-                'inline_keyboard' => array_chunk($menu, 1),
-            ]);
-
-            if(Kernel::isTestEnvironment())
-            {
-                $markup = null;
-            }
-
-            $TelegramRequest->getSystem() ? $delete[] = $TelegramRequest->getSystem() : false;
-            $TelegramRequest->getId() ? $delete[] = $TelegramRequest->getSystem() : false;
-
-            $msg = '<b>Не удалось убедиться, что этот аккаунт принадлежит Вам.</b>'.PHP_EOL;
-            $msg .= PHP_EOL;
-            $msg .= 'Отправьте свой <b>E-mail</b>, с которого Вы регистрировались для привязки к существующему аккаунту, либо зарегистрируйтесь с помощью <b>QR-кода</b> на странице регистрации.';
-
-            $this
-                ->telegramSendMessage
-                ->chanel($TelegramRequest->getChatId())
-                ->delete($delete)
-                ->message($msg)
-                ->markup($markup)
-                ->send();
-
-            $message->complete();
+            return;
         }
+
+        $this->handle($TelegramRequest);
+        $message->complete();
+    }
+
+    public function handle(TelegramRequestMessage $TelegramRequest): void
+    {
+        $menu[] = [
+            'text' => 'Регистрация по QR',
+            'url' => 'https://'.$this->HOST.$this->urlGenerator->generate('auth-telegram:user.auth')
+        ];
+
+        $markup = json_encode([
+            'inline_keyboard' => array_chunk($menu, 1),
+        ]);
+
+        $delete = [];
+
+        $TelegramRequest->getSystem() ? $delete[] = $TelegramRequest->getSystem() : false;
+        $TelegramRequest->getId() ? $delete[] = $TelegramRequest->getSystem() : false;
+
+        $msg = '<b>Не удалось убедиться, что этот аккаунт принадлежит Вам.</b>'.PHP_EOL;
+        $msg .= PHP_EOL;
+        $msg .= sprintf('Отправьте свой <b>E-mail</b>, с которого Вы регистрировались для привязки к существующему аккаунту %s, либо зарегистрируйтесь с помощью <b>QR-кода</b> на странице регистрации.', $this->HOST);
+
+        $this
+            ->telegramSendMessage
+            ->chanel($TelegramRequest->getChatId())
+            ->delete($delete)
+            ->message($msg)
+            ->markup($markup)
+            ->send();
+
     }
 }
 
