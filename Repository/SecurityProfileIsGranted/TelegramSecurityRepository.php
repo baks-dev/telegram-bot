@@ -37,7 +37,7 @@ use BaksDev\Users\Profile\Group\Type\Prefix\Group\GroupPrefix;
 use BaksDev\Users\Profile\Group\Type\Prefix\Voter\RoleVoterPrefix;
 use BaksDev\Users\Profile\UserProfile\Type\Id\UserProfileUid;
 
-final class TelegramSecurity implements TelegramSecurityInterface
+final class TelegramSecurityRepository implements TelegramSecurityInterface
 {
     private DBALQueryBuilder $DBALQueryBuilder;
     private ExistProfileGroupInterface $existProfileGroup;

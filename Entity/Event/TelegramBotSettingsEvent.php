@@ -64,7 +64,7 @@ class TelegramBotSettingsEvent extends EntityEvent
     /**
      * Модификатор
      */
-    #[ORM\OneToOne(mappedBy: 'event', targetEntity: TelegramBotSettingsModify::class, cascade: ['all'])]
+    #[ORM\OneToOne(targetEntity: TelegramBotSettingsModify::class, mappedBy: 'event', cascade: ['all'])]
     private TelegramBotSettingsModify $modify;
 
 
