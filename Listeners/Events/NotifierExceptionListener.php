@@ -29,6 +29,7 @@ use App\Kernel;
 use BaksDev\Auth\Telegram\Repository\AccountTelegramAdmin\AccountTelegramAdminInterface;
 use BaksDev\Core\Cache\AppCacheInterface;
 use BaksDev\Telegram\Api\TelegramSendMessage;
+use DateInterval;
 use Psr\Cache\CacheItemInterface;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\DependencyInjection\Attribute\When;
@@ -51,7 +52,8 @@ final class NotifierExceptionListener
         AccountTelegramAdminInterface $accountTelegramAdmin,
         TelegramSendMessage $telegramSendMessage,
         AppCacheInterface $cache
-    ){
+    )
+    {
         $this->telegramSendMessage = $telegramSendMessage;
         $this->accountTelegramAdmin = $accountTelegramAdmin;
         $this->HOST = $HOST;
@@ -61,11 +63,6 @@ final class NotifierExceptionListener
 
     public function onKernelException(ExceptionEvent $event): void
     {
-        if(Kernel::isDump() === false)
-        {
-            return;
-        }
-
         $chat = $this->accountTelegramAdmin->find();
 
         if(!$chat)
@@ -73,60 +70,63 @@ final class NotifierExceptionListener
             return;
         }
 
-        if($chat)
+        $Throwable = $event->getThrowable();
+
+        if($Throwable->getMessage() === 'Full authentication is required to access this resource')
         {
-            $Throwable = $event->getThrowable();
-
-            /** Кешируем ошибку */
-            $md5 = md5($Throwable->getMessage());
-            /** @var CacheItemInterface $cacheItem */
-            $cacheItem = $this->cache->getItem($md5);
-
-            if($cacheItem->get() === 1)
-            {
-                return;
-            }
-
-            $cacheItem->set(1);
-            $cacheItem->expiresAfter(60 * 10);
-            $this->cache->save($cacheItem);
-
-            $PATH = $Throwable->getFile();
-
-            $substring = strstr($Throwable->getFile(), $this->HOST);
-
-            if($substring !== false)
-            {
-
-                $PATH = substr($substring, strlen($this->HOST));
-            }
-
-            $msg = sprintf('<b>%s</b>', $Throwable->getMessage());
-            $msg .= PHP_EOL;
-            $msg .= PHP_EOL;
-            $msg .= sprintf('<code>%s:%s</code>', $PATH, $Throwable->getLine());
-
-
-            /** Символ Удалить  */
-            $char = "\u274C";
-            $decoded = json_decode('["'.$char.'"]');
-            $remove = mb_convert_encoding($decoded[0], 'UTF-8');
-
-            $menu[] = [
-                'text' => $remove.' Удалить сообщение',
-                'callback_data' => 'telegram-delete-message'
-            ];
-
-            $markup = json_encode([
-                'inline_keyboard' => array_chunk($menu, 1),
-            ]);
-
-            $this
-                ->telegramSendMessage
-                ->chanel($chat)
-                ->message($msg)
-                ->markup($markup)
-                ->send();
+            return;
         }
+
+        /** Кешируем ошибку */
+        $md5 = md5($Throwable->getMessage());
+        /** @var CacheItemInterface $cacheItem */
+        $cacheItem = $this->cache->getItem($md5);
+
+        if($cacheItem->get() === 1)
+        {
+            return;
+        }
+
+        $cacheItem->set(1);
+        $cacheItem->expiresAfter(DateInterval::createFromDateString('10 minutes'));
+        $this->cache->save($cacheItem);
+
+        $PATH = $Throwable->getFile();
+
+        $substring = strstr($Throwable->getFile(), $this->HOST);
+
+        if($substring !== false)
+        {
+
+            $PATH = substr($substring, strlen($this->HOST));
+        }
+
+        $msg = sprintf('<b>%s</b>', $Throwable->getMessage());
+        $msg .= PHP_EOL;
+        $msg .= PHP_EOL;
+        $msg .= sprintf('<code>%s:%s</code>', $PATH, $Throwable->getLine());
+
+
+        /** Символ Удалить  */
+        $char = "\u274C";
+        $decoded = json_decode('["'.$char.'"]');
+        $remove = mb_convert_encoding($decoded[0], 'UTF-8');
+
+        $menu[] = [
+            'text' => $remove.' Удалить сообщение',
+            'callback_data' => 'telegram-delete-message'
+        ];
+
+        $markup = json_encode([
+            'inline_keyboard' => array_chunk($menu, 1),
+        ]);
+
+        $this
+            ->telegramSendMessage
+            ->chanel($chat)
+            ->message($msg)
+            ->markup($markup)
+            ->send();
+
     }
 }
