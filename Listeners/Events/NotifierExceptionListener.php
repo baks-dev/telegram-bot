@@ -63,16 +63,12 @@ final class NotifierExceptionListener
 
     public function onKernelException(ExceptionEvent $event): void
     {
-        $chat = $this->accountTelegramAdmin->find();
-
-        if(!$chat)
-        {
-            return;
-        }
-
         $Throwable = $event->getThrowable();
 
-        if($Throwable->getMessage() === 'Full authentication is required to access this resource')
+        if(
+            $Throwable->getMessage() === 'Full authentication is required to access this resource.' ||
+            $Throwable->getMessage() === 'Access Denied.'
+        )
         {
             return;
         }
@@ -82,7 +78,16 @@ final class NotifierExceptionListener
         /** @var CacheItemInterface $cacheItem */
         $cacheItem = $this->cache->getItem($md5);
 
-        if($cacheItem->get() === 1)
+        //if($cacheItem->get() === 1)
+        if($cacheItem->isHit())
+        {
+            return;
+        }
+
+
+        $chat = $this->accountTelegramAdmin->find();
+
+        if(!$chat)
         {
             return;
         }
