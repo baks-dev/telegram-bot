@@ -60,14 +60,14 @@ final class NotifierExceptionListener
         $this->cache = $cache->init('telegram-bot');
     }
 
-
     public function onKernelException(ExceptionEvent $event): void
     {
         $Throwable = $event->getThrowable();
 
         if(
             $Throwable->getMessage() === 'Full authentication is required to access this resource.' ||
-            $Throwable->getMessage() === 'Access Denied.'
+            $Throwable->getMessage() === 'Access Denied.' ||
+            $Throwable->getMessage() === 'Unable to logout as there is no logged-in user.'
         )
         {
             return;
