@@ -1,6 +1,7 @@
 
 # Роль
 ROLE_TELEGRAM_SETTINGS:
+  header: 'Telegram'
   name: 'Telegram-bot'
   desc: 'Настрйоки подключения Telegram Bot'
 

@@ -1,4 +1,5 @@
 # Role
 ROLE_TELEGRAM_SETTINGS:
+  header: 'Telegram'
   name: 'Telegrambot'
   desc: 'Telegram Bot connection settings'
