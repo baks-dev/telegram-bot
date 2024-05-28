@@ -68,6 +68,8 @@ final class SettingsController extends AbstractController
 
         if($form->isSubmitted() && $form->isValid() && $form->has('telegram_bot_settings'))
         {
+            $this->refreshTokenForm($form);
+
             try
             {
                 /**
