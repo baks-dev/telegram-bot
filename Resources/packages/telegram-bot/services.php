@@ -1,17 +1,17 @@
 <?php
 /*
- *  Copyright 2023.  Baks.dev <admin@baks.dev>
- *  
+ *  Copyright 2024.  Baks.dev <admin@baks.dev>
+ *
  *  Permission is hereby granted, free of charge, to any person obtaining a copy
  *  of this software and associated documentation files (the "Software"), to deal
  *  in the Software without restriction, including without limitation the rights
  *  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  *  copies of the Software, and to permit persons to whom the Software is furnished
  *  to do so, subject to the following conditions:
- *  
+ *
  *  The above copyright notice and this permission notice shall be included in all
  *  copies or substantial portions of the Software.
- *  
+ *
  *  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  *  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  *  FITNESS FOR A PARTICULAR PURPOSE AND NON INFRINGEMENT. IN NO EVENT SHALL THE
@@ -23,26 +23,24 @@
 
 namespace Symfony\Component\DependencyInjection\Loader\Configurator;
 
-use BaksDev\Telegram\Bot\Type\Settings\Event\TelegramBotSettingsEventType;
-use BaksDev\Telegram\Bot\Type\Settings\Event\TelegramBotSettingsEventUid;
-use BaksDev\Telegram\Bot\Type\Settings\Id\UsersTableTelegramSettingsIdentificator;
-use BaksDev\Telegram\Bot\Type\Settings\Id\UsersTableTelegramSettingsIdentificatorType;
-use Symfony\Config\DoctrineConfig;
+use BaksDev\Telegram\Bot\BaksDevTelegramBotBundle;
 
-return static function(ContainerConfigurator $container, DoctrineConfig $doctrine)
-{
-    $doctrine->dbal()->type(UsersTableTelegramSettingsIdentificator::TYPE)->class(UsersTableTelegramSettingsIdentificatorType::class);
-    $doctrine->dbal()->type(TelegramBotSettingsEventUid::TYPE)->class(TelegramBotSettingsEventType::class);
+return static function (ContainerConfigurator $configurator) {
+    
+    $services = $configurator->services()
+        ->defaults()
+        ->autowire()
+        ->autoconfigure()
+    ;
 
-    $emDefault = $doctrine->orm()->entityManager('default')->autoMapping(true);
+    $NAMESPACE = BaksDevTelegramBotBundle::NAMESPACE;
+    $PATH = BaksDevTelegramBotBundle::PATH;
 
-    $MODULE = substr(__DIR__, 0, strpos(__DIR__, "Resources"));
-
-    $emDefault->mapping('telegram-bot')
-		->type('attribute')
-		->dir($MODULE.'Entity')
-		->isBundle(false)
-		->prefix('BaksDev\Telegram\Bot')
-		->alias('telegram-bot')
-	;
+    $services->load($NAMESPACE, $PATH)
+        ->exclude([
+            $PATH.'{Entity,Resources,Type}',
+            $PATH.'**/*Message.php',
+            $PATH.'**/*DTO.php',
+        ])
+    ;
 };

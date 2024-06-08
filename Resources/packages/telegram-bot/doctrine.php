@@ -23,8 +23,25 @@
 
 namespace Symfony\Component\DependencyInjection\Loader\Configurator;
 
-use Symfony\Config\FrameworkConfig;
+use BaksDev\Telegram\Bot\BaksDevTelegramBotBundle;
+use BaksDev\Telegram\Bot\Type\Settings\Event\TelegramBotSettingsEventType;
+use BaksDev\Telegram\Bot\Type\Settings\Event\TelegramBotSettingsEventUid;
+use BaksDev\Telegram\Bot\Type\Settings\Id\UsersTableTelegramSettingsIdentificator;
+use BaksDev\Telegram\Bot\Type\Settings\Id\UsersTableTelegramSettingsIdentificatorType;
+use Symfony\Config\DoctrineConfig;
 
-return static function(FrameworkConfig $config) {
-	$config->translator()->paths([__DIR__.'/../translations']);
+return static function(ContainerConfigurator $container, DoctrineConfig $doctrine)
+{
+    $doctrine->dbal()->type(UsersTableTelegramSettingsIdentificator::TYPE)->class(UsersTableTelegramSettingsIdentificatorType::class);
+    $doctrine->dbal()->type(TelegramBotSettingsEventUid::TYPE)->class(TelegramBotSettingsEventType::class);
+
+    $emDefault = $doctrine->orm()->entityManager('default')->autoMapping(true);
+
+    $emDefault->mapping('telegram-bot')
+		->type('attribute')
+		->dir(BaksDevTelegramBotBundle::PATH.'Entity')
+		->isBundle(false)
+		->prefix('BaksDev\Telegram\Bot')
+		->alias('telegram-bot')
+	;
 };
