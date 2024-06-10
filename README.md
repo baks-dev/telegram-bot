@@ -1,6 +1,6 @@
 # BaksDev Telegram Bot
 
-[![Version](https://img.shields.io/badge/version-7.1.3-blue)](https://github.com/baks-dev/telegram-bot/releases)
+[![Version](https://img.shields.io/badge/version-7.1.4-blue)](https://github.com/baks-dev/telegram-bot/releases)
 ![php 8.3+](https://img.shields.io/badge/php-min%208.3-red.svg)
 
 Модуль Telegram бота
