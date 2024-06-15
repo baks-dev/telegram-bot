@@ -31,8 +31,8 @@ return static function(FrameworkConfig $framework) {
 
     $messenger
         ->transport('telegram-bot')
-        ->dsn('%env(MESSENGER_TRANSPORT_DSN)%')
-        ->options(['queue_name' => 'telegram-bot'])
+        ->dsn('redis://%env(REDIS_PASSWORD)%@%env(REDIS_HOST)%:%env(REDIS_PORT)%?auto_setup=true')
+        ->options(['stream' => 'telegram-bot'])
         ->failureTransport('failed-telegram-bot')
         ->retryStrategy()
         ->maxRetries(3)
@@ -43,7 +43,9 @@ return static function(FrameworkConfig $framework) {
 
     ;
 
-    $messenger->transport('failed-telegram-bot')
+    $failure = $framework->messenger();
+
+    $failure->transport('failed-telegram-bot')
         ->dsn('%env(MESSENGER_TRANSPORT_DSN)%')
         ->options(['queue_name' => 'failed-telegram-bot'])
     ;
