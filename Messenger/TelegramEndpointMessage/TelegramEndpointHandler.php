@@ -41,10 +41,10 @@ use BaksDev\Telegram\Request\Type\TelegramRequestCallback;
 use BaksDev\Telegram\Request\Type\TelegramRequestIdentifier;
 use BaksDev\Telegram\Request\Type\TelegramRequestMessage;
 use Psr\Log\LoggerInterface;
+use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 use Symfony\Contracts\Cache\CacheInterface;
-use Symfony\Bundle\SecurityBundle\Security;
 
 
 #[AsMessageHandler(priority: -999)]
@@ -57,7 +57,9 @@ final class TelegramEndpointHandler
         $this->telegramSendMessage = $telegramSendMessage;
     }
 
-    /** В случае, если никакой из хендлеров не отработал - отправляем сообщение с вопросом */
+    /**
+     * В случае, если никакой из хендлеров не отработал - отправляем сообщение с вопросом
+     */
     public function __invoke(TelegramEndpointMessage $message): void
     {
         $TelegramRequest = $message->getTelegramRequest();
