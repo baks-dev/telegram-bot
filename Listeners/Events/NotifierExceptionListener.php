@@ -64,10 +64,12 @@ final class NotifierExceptionListener
     {
         $Throwable = $event->getThrowable();
 
+        $throwableMessage = $Throwable->getMessage();
+
         if(
-            $Throwable->getMessage() === 'Full authentication is required to access this resource.' ||
-            $Throwable->getMessage() === 'Access Denied.' ||
-            $Throwable->getMessage() === 'Unable to logout as there is no logged-in user.'
+            $throwableMessage === 'Full authentication is required to access this resource.' ||
+            $throwableMessage === 'Access Denied.' ||
+            $throwableMessage === 'https://trianglerus.ru/admin/order/phone'
         )
         {
             return;
