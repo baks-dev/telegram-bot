@@ -67,9 +67,9 @@ final class NotifierExceptionListener
         $throwableMessage = $Throwable->getMessage();
 
         if(
-            $throwableMessage === 'Full authentication is required to access this resource.' ||
-            $throwableMessage === 'Access Denied.' ||
-            $throwableMessage === 'https://trianglerus.ru/admin/order/phone'
+            stripos($throwableMessage, 'Full authentication') !== false ||
+            stripos($throwableMessage, 'Access Denied') !== false ||
+            stripos($throwableMessage, 'admin/order/phone') !== false
         )
         {
             return;
