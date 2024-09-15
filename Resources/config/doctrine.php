@@ -1,6 +1,6 @@
 <?php
 /*
- *  Copyright 2024.  Baks.dev <admin@baks.dev>
+ *  Copyright 2023.  Baks.dev <admin@baks.dev>
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a copy
  *  of this software and associated documentation files (the "Software"), to deal
@@ -24,23 +24,22 @@
 namespace Symfony\Component\DependencyInjection\Loader\Configurator;
 
 use BaksDev\Telegram\Bot\BaksDevTelegramBotBundle;
+use BaksDev\Telegram\Bot\Type\Settings\Event\TelegramBotSettingsEventType;
+use BaksDev\Telegram\Bot\Type\Settings\Event\TelegramBotSettingsEventUid;
+use BaksDev\Telegram\Bot\Type\Settings\Id\UsersTableTelegramSettingsIdentificator;
+use BaksDev\Telegram\Bot\Type\Settings\Id\UsersTableTelegramSettingsIdentificatorType;
+use Symfony\Config\DoctrineConfig;
 
-return static function (ContainerConfigurator $configurator) {
-    
-    $services = $configurator->services()
-        ->defaults()
-        ->autowire()
-        ->autoconfigure()
-    ;
+return static function(ContainerConfigurator $container, DoctrineConfig $doctrine) {
+    $doctrine->dbal()->type(UsersTableTelegramSettingsIdentificator::TYPE)->class(UsersTableTelegramSettingsIdentificatorType::class);
+    $doctrine->dbal()->type(TelegramBotSettingsEventUid::TYPE)->class(TelegramBotSettingsEventType::class);
 
-    $NAMESPACE = BaksDevTelegramBotBundle::NAMESPACE;
-    $PATH = BaksDevTelegramBotBundle::PATH;
+    $emDefault = $doctrine->orm()->entityManager('default')->autoMapping(true);
 
-    $services->load($NAMESPACE, $PATH)
-        ->exclude([
-            $PATH.'{Entity,Resources,Type}',
-            $PATH.'**/*Message.php',
-            $PATH.'**/*DTO.php',
-        ])
-    ;
+    $emDefault->mapping('telegram-bot')
+        ->type('attribute')
+        ->dir(BaksDevTelegramBotBundle::PATH.'Entity')
+        ->isBundle(false)
+        ->prefix(BaksDevTelegramBotBundle::NAMESPACE.'\\Entity')
+        ->alias('telegram-bot');
 };

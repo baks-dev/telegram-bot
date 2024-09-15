@@ -28,7 +28,7 @@ namespace BaksDev\Telegram\Bot\Listeners\Events;
 use App\Kernel;
 use BaksDev\Auth\Telegram\Repository\AccountTelegramAdmin\AccountTelegramAdminInterface;
 use BaksDev\Core\Cache\AppCacheInterface;
-use BaksDev\Telegram\Api\TelegramSendMessage;
+use BaksDev\Telegram\Api\TelegramSendMessages;
 use DateInterval;
 use Psr\Cache\CacheItemInterface;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
@@ -42,22 +42,17 @@ use Symfony\Contracts\Cache\CacheInterface;
 #[When(env: 'prod')]
 final class NotifierExceptionListener
 {
-    private TelegramSendMessage $telegramSendMessage;
-    private AccountTelegramAdminInterface $accountTelegramAdmin;
-    private string $HOST;
     private CacheInterface $cache;
 
     public function __construct(
-        #[Autowire(env: 'HOST')] string $HOST,
-        AccountTelegramAdminInterface $accountTelegramAdmin,
-        TelegramSendMessage $telegramSendMessage,
-        AppCacheInterface $cache
+        #[Autowire(env: 'HOST')] private readonly string $HOST,
+        private readonly AccountTelegramAdminInterface $accountTelegramAdmin,
+        private readonly TelegramSendMessages $telegramSendMessage,
+        AppCacheInterface $appCache
     )
     {
-        $this->telegramSendMessage = $telegramSendMessage;
-        $this->accountTelegramAdmin = $accountTelegramAdmin;
-        $this->HOST = $HOST;
-        $this->cache = $cache->init('telegram-bot');
+
+        $this->cache = $appCache->init('telegram-bot');
     }
 
     public function onKernelException(ExceptionEvent $event): void

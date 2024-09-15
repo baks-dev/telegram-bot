@@ -34,8 +34,8 @@ use BaksDev\Auth\Telegram\UseCase\Admin\NewEdit\AccountTelegramDTO;
 use BaksDev\Auth\Telegram\UseCase\Admin\NewEdit\AccountTelegramHandler;
 use BaksDev\Core\Cache\AppCacheInterface;
 use BaksDev\Manufacture\Part\Telegram\Type\ManufacturePartDone;
-use BaksDev\Telegram\Api\TelegramDeleteMessage;
-use BaksDev\Telegram\Api\TelegramSendMessage;
+use BaksDev\Telegram\Api\TelegramDeleteMessages;
+use BaksDev\Telegram\Api\TelegramSendMessages;
 use BaksDev\Telegram\Request\TelegramRequest;
 use BaksDev\Telegram\Request\Type\TelegramRequestCallback;
 use BaksDev\Telegram\Request\Type\TelegramRequestIdentifier;
@@ -50,9 +50,9 @@ use Symfony\Contracts\Cache\CacheInterface;
 #[AsMessageHandler(priority: -999)]
 final class TelegramEndpointHandler
 {
-    private TelegramSendMessage $telegramSendMessage;
+    private TelegramSendMessages $telegramSendMessage;
 
-    public function __construct(TelegramSendMessage $telegramSendMessage)
+    public function __construct(TelegramSendMessages $telegramSendMessage)
     {
         $this->telegramSendMessage = $telegramSendMessage;
     }
