@@ -10,7 +10,7 @@
 # systemctl stop baks-telegram-bot@1.service
 
 [Unit]
-Description=Symfony messenger telegram-bot %i
+Description=telegram-bot
 StartLimitBurst=5
 StartLimitIntervalSec=0
 
