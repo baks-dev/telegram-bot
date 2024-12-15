@@ -46,19 +46,11 @@ final class TelegramBotSettingsRepository implements TelegramBotSettingsInterfac
      */
     private bool|string $secret = false;
 
-    private DBALQueryBuilder $DBALQueryBuilder;
-    private ORMQueryBuilder $ORMQueryBuilder;
-
-
 
     public function __construct(
-        DBALQueryBuilder $DBALQueryBuilder,
-        ORMQueryBuilder $ORMQueryBuilder,
-    )
-    {
-        $this->DBALQueryBuilder = $DBALQueryBuilder;
-        $this->ORMQueryBuilder = $ORMQueryBuilder;
-    }
+        private readonly DBALQueryBuilder $DBALQueryBuilder,
+        private readonly ORMQueryBuilder $ORMQueryBuilder,
+    ) {}
 
     public function getCurrentTelegramSettingsEvent(): ?TelegramBotSettingsEvent
     {
@@ -107,7 +99,7 @@ final class TelegramBotSettingsRepository implements TelegramBotSettingsInterfac
 
         $dbal->leftJoin(
             'settings',
-            TelegramBotSettingsEvent::TABLE,
+            TelegramBotSettingsEvent::class,
             'event',
             'event.id = settings.event'
         );

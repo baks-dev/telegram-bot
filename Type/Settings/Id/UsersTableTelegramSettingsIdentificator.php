@@ -20,7 +20,7 @@ namespace BaksDev\Telegram\Bot\Type\Settings\Id;
 
 final class UsersTableTelegramSettingsIdentificator
 {
-    public const TYPE = 'telegram_bot_settings';
+    public const string TYPE = 'telegram_bot_settings';
 
     private string $value;
 

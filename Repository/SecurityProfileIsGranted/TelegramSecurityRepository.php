@@ -177,18 +177,18 @@ final class TelegramSecurityRepository implements TelegramSecurityInterface
                     )) AS roles
                 ");
 
-                $qb->from(ProfileGroup::TABLE, 'profile_group');
+                $qb->from(ProfileGroup::class, 'profile_group');
 
                 $qb->leftJoin(
                     'profile_group',
-                    ProfileRole::TABLE,
+                    ProfileRole::class,
                     'profile_role',
                     'profile_role.event = profile_group.event'
                 );
 
                 $qb->leftJoin(
                     'profile_role',
-                    ProfileVoter::TABLE,
+                    ProfileVoter::class,
                     'profile_voter',
                     'profile_voter.role = profile_role.id'
                 );
@@ -265,18 +265,18 @@ final class TelegramSecurityRepository implements TelegramSecurityInterface
                     )) AS roles
                 ");
 
-                $qb->from(ProfileGroup::TABLE, 'profile_group');
+                $qb->from(ProfileGroup::class, 'profile_group');
 
                 $qb->leftJoin(
                     'profile_group',
-                    ProfileRole::TABLE,
+                    ProfileRole::class,
                     'profile_role',
                     'profile_role.event = profile_group.event'
                 );
 
                 $qb->leftJoin(
                     'profile_role',
-                    ProfileVoter::TABLE,
+                    ProfileVoter::class,
                     'profile_voter',
                     'profile_voter.role = profile_role.id'
                 );
