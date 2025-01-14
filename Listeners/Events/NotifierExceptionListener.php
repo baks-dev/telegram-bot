@@ -25,7 +25,6 @@ declare(strict_types=1);
 
 namespace BaksDev\Telegram\Bot\Listeners\Events;
 
-use App\Kernel;
 use BaksDev\Auth\Telegram\Repository\AccountTelegramAdmin\AccountTelegramAdminInterface;
 use BaksDev\Core\Cache\AppCacheInterface;
 use BaksDev\Telegram\Api\TelegramSendMessages;
@@ -38,8 +37,8 @@ use Symfony\Component\HttpKernel\Event\ExceptionEvent;
 use Symfony\Component\HttpKernel\KernelEvents;
 use Symfony\Contracts\Cache\CacheInterface;
 
-#[AsEventListener(event: KernelEvents::EXCEPTION)]
 #[When(env: 'prod')]
+#[AsEventListener(event: KernelEvents::EXCEPTION)]
 final class NotifierExceptionListener
 {
     private CacheInterface $cache;
