@@ -31,7 +31,7 @@ return static function(FrameworkConfig $framework) {
 
     $messenger
         ->transport('telegram-bot')
-        ->dsn('redis://%env(REDIS_PASSWORD)%@%env(REDIS_HOST)%:%env(REDIS_PORT)%?auto_setup=true')
+        ->dsn('redis://%env(REDIS_PASSWORD)%@%env(REDIS_HOST)%:%env(REDIS_PORT)%?dbindex=%env(REDIS_TABLE)&auto_setup=true')
         ->options(['stream' => 'telegram-bot'])
         ->failureTransport('failed-telegram-bot')
         ->retryStrategy()
