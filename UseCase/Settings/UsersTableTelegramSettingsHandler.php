@@ -32,42 +32,27 @@ use BaksDev\Telegram\Bot\Messenger\Settings\TelegramBotSettingsMessage;
 use BaksDev\Telegram\Bot\Type\Settings\Id\UsersTableTelegramSettingsIdentificator;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
+use Symfony\Component\DependencyInjection\Attribute\Target;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
-final class UsersTableTelegramSettingsHandler
+final readonly class UsersTableTelegramSettingsHandler
 {
-    private EntityManagerInterface $entityManager;
-
-    private ValidatorInterface $validator;
-
-    private LoggerInterface $logger;
-
-    private MessageDispatchInterface $messageDispatch;
-
     public function __construct(
-        EntityManagerInterface $entityManager,
-        ValidatorInterface $validator,
-        LoggerInterface $logger,
-        MessageDispatchInterface $messageDispatch
-    ) {
-        $this->entityManager = $entityManager;
-        $this->validator = $validator;
-        $this->logger = $logger;
-        $this->messageDispatch = $messageDispatch;
-    }
+        #[Target('telegramBotLogger')] private LoggerInterface $logger,
+        private EntityManagerInterface $entityManager,
+        private ValidatorInterface $validator,
+        private MessageDispatchInterface $messageDispatch
+    ) {}
 
     /** @see TelegramBotSettings */
-    public function handle(
-        TelegramBotSettingsDTO $command,
-        //?UploadedFile $cover = null
-    ): string|TelegramBotSettings
+    public function handle(TelegramBotSettingsDTO $command): string|TelegramBotSettings
     {
         /**
          *  Валидация UsersTableTelegramSettingsDTO.
          */
         $errors = $this->validator->validate($command);
 
-        if (count($errors) > 0)
+        if(count($errors) > 0)
         {
             /** Ошибка валидации */
             $uniqid = uniqid('', false);
@@ -84,7 +69,7 @@ final class UsersTableTelegramSettingsHandler
             ->find(new UsersTableTelegramSettingsIdentificator());
 
         /* @var TelegramBotSettings $Main */
-        if (!$Main)
+        if(!$Main)
         {
             $Main = new TelegramBotSettings();
             $this->entityManager->persist($Main);
@@ -121,7 +106,7 @@ final class UsersTableTelegramSettingsHandler
          */
         $errors = $this->validator->validate($Main);
 
-        if (count($errors) > 0)
+        if(count($errors) > 0)
         {
             /** Ошибка валидации */
             $uniqid = uniqid('', false);
