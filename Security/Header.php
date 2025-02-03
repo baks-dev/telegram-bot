@@ -43,9 +43,9 @@ final class Header implements MenuAdminInterface
      * Добавляем заголовок в меню администрирования.
      */
 
-    public function getPath(): ?string
+    public function getPath(): false
     {
-        return null;
+        return false;
     }
 
     /**
