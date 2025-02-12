@@ -25,18 +25,12 @@ declare(strict_types=1);
 
 namespace BaksDev\Telegram\Bot\Messenger\TelegramEndpointMessage;
 
-use BaksDev\Auth\Telegram\Type\Event\AccountTelegramEventUid;
 use BaksDev\Telegram\Request\TelegramRequestInterface;
-use BaksDev\Users\User\Type\Id\UserUid;
 
 final class TelegramEndpointMessage
 {
-    private ?TelegramRequestInterface $telegramRequest = null;
 
-    public function __construct(TelegramRequestInterface $telegramRequest)
-    {
-        $this->telegramRequest = $telegramRequest;
-    }
+    public function __construct(private ?TelegramRequestInterface $telegramRequest) {}
 
     /**
      * TelegramRequest
@@ -46,7 +40,9 @@ final class TelegramEndpointMessage
         return $this->telegramRequest;
     }
 
-    /** Метод сбрасывает TelegramRequest */
+    /**
+     * Метод сбрасывает TelegramRequest
+     */
     public function complete(): void
     {
         $this->telegramRequest = null;

@@ -25,37 +25,16 @@ declare(strict_types=1);
 
 namespace BaksDev\Telegram\Bot\Messenger\TelegramEndpointMessage;
 
-use App\Kernel;
-use BaksDev\Auth\Email\Repository\AccountEventActiveByEmail\AccountEventActiveByEmailInterface;
-use BaksDev\Auth\Email\Type\Email\AccountEmail;
-use BaksDev\Auth\Telegram\Repository\AccountTelegramEvent\AccountTelegramEventInterface;
-use BaksDev\Auth\Telegram\Type\Status\AccountTelegramStatus\Collection\AccountTelegramStatusCollection;
-use BaksDev\Auth\Telegram\UseCase\Admin\NewEdit\AccountTelegramDTO;
-use BaksDev\Auth\Telegram\UseCase\Admin\NewEdit\AccountTelegramHandler;
-use BaksDev\Core\Cache\AppCacheInterface;
-use BaksDev\Manufacture\Part\Telegram\Type\ManufacturePartDone;
-use BaksDev\Telegram\Api\TelegramDeleteMessages;
 use BaksDev\Telegram\Api\TelegramSendMessages;
-use BaksDev\Telegram\Request\TelegramRequest;
-use BaksDev\Telegram\Request\Type\TelegramRequestCallback;
-use BaksDev\Telegram\Request\Type\TelegramRequestIdentifier;
 use BaksDev\Telegram\Request\Type\TelegramRequestMessage;
-use Psr\Log\LoggerInterface;
-use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
-use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
-use Symfony\Contracts\Cache\CacheInterface;
 
 
 #[AsMessageHandler(priority: -999)]
 final class TelegramEndpointHandler
 {
-    private TelegramSendMessages $telegramSendMessage;
 
-    public function __construct(TelegramSendMessages $telegramSendMessage)
-    {
-        $this->telegramSendMessage = $telegramSendMessage;
-    }
+    public function __construct(private TelegramSendMessages $telegramSendMessage) {}
 
     /**
      * В случае, если никакой из хендлеров не отработал - отправляем сообщение с вопросом
@@ -75,8 +54,7 @@ final class TelegramEndpointHandler
                 ->telegramSendMessage
                 ->chanel($TelegramRequest->getChatId())
                 ->message('Здравствуйте! Напишите, чем я могу вам помочь?')
-                ->send()
-            ;
+                ->send();
         }
     }
 }

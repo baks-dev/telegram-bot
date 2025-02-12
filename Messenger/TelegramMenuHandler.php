@@ -25,31 +25,13 @@ declare(strict_types=1);
 
 namespace BaksDev\Telegram\Bot\Messenger;
 
-use App\Kernel;
-use BaksDev\Auth\Email\Repository\AccountEventActiveByEmail\AccountEventActiveByEmailInterface;
-use BaksDev\Auth\Email\Type\Email\AccountEmail;
-use BaksDev\Auth\Telegram\Repository\AccountTelegramEvent\AccountTelegramEventInterface;
 use BaksDev\Auth\Telegram\Repository\ActiveProfileByAccountTelegram\ActiveProfileByAccountTelegramInterface;
-use BaksDev\Auth\Telegram\Type\Status\AccountTelegramStatus\Collection\AccountTelegramStatusCollection;
-use BaksDev\Auth\Telegram\UseCase\Admin\NewEdit\AccountTelegramDTO;
-use BaksDev\Auth\Telegram\UseCase\Admin\NewEdit\AccountTelegramHandler;
-use BaksDev\Core\Cache\AppCacheInterface;
-use BaksDev\Manufacture\Part\Telegram\Type\ManufacturePartDone;
-use BaksDev\Telegram\Api\TelegramDeleteMessages;
 use BaksDev\Telegram\Api\TelegramSendMessages;
 use BaksDev\Telegram\Bot\Messenger\TelegramEndpointMessage\TelegramEndpointMessage;
-use BaksDev\Telegram\Request\TelegramRequest;
-use BaksDev\Telegram\Request\Type\TelegramRequestCallback;
-use BaksDev\Telegram\Request\Type\TelegramRequestIdentifier;
 use BaksDev\Telegram\Request\Type\TelegramRequestMessage;
-use Psr\Log\LoggerInterface;
-use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
-use Symfony\Component\Routing\Generator\UrlGenerator;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
-use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
-use Symfony\Contracts\Cache\CacheInterface;
 
 #[AsMessageHandler(priority: 999)]
 final class TelegramMenuHandler
@@ -57,16 +39,15 @@ final class TelegramMenuHandler
     private TelegramSendMessages $telegramSendMessage;
     private UrlGeneratorInterface $urlGenerator;
     private ActiveProfileByAccountTelegramInterface $activeProfileByAccountTelegram;
-    private string $HOST;
 
     public function __construct(
-        #[Autowire(env: 'HOST')] string $HOST,
+        #[Autowire(env: 'HOST')] private readonly string $HOST,
         TelegramSendMessages $telegramSendMessage,
         UrlGeneratorInterface $urlGenerator,
         ActiveProfileByAccountTelegramInterface $activeProfileByAccountTelegram,
     )
     {
-        $this->HOST = $HOST;
+
         $this->telegramSendMessage = $telegramSendMessage;
         $this->urlGenerator = $urlGenerator;
         $this->activeProfileByAccountTelegram = $activeProfileByAccountTelegram;
@@ -78,10 +59,6 @@ final class TelegramMenuHandler
      */
     public function __invoke(TelegramEndpointMessage $message): void
     {
-        if(Kernel::isTestEnvironment())
-        {
-            return;
-        }
 
         /** @var TelegramRequestMessage $TelegramRequest */
         $TelegramRequest = $message->getTelegramRequest();

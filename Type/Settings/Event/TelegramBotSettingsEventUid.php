@@ -25,7 +25,6 @@ declare(strict_types=1);
 
 namespace BaksDev\Telegram\Bot\Type\Settings\Event;
 
-use App\Kernel;
 use BaksDev\Core\Type\UidType\Uid;
 use Symfony\Component\Uid\AbstractUid;
 
