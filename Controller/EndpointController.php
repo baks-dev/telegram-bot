@@ -25,13 +25,12 @@ declare(strict_types=1);
 
 namespace BaksDev\Telegram\Bot\Controller;
 
-use BaksDev\Core\Cache\AppCacheInterface;
 use BaksDev\Core\Controller\AbstractController;
+use BaksDev\Core\Deduplicator\DeduplicatorInterface;
 use BaksDev\Core\Messenger\MessageDispatchInterface;
 use BaksDev\Telegram\Bot\Messenger\TelegramEndpointMessage\TelegramEndpointMessage;
 use BaksDev\Telegram\Request\TelegramRequest;
 use BaksDev\Telegram\Request\TelegramRequestInterface;
-use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Attribute\AsController;
@@ -46,15 +45,24 @@ final class EndpointController extends AbstractController
     #[Route('/telegram/endpoint', name: 'telegram.endpoint', methods: ['GET', 'POST'])]
     public function index(
         MessageDispatchInterface $messageDispatch,
-        TelegramRequest $telegramRequest
+        TelegramRequest $telegramRequest,
+        DeduplicatorInterface $deduplicator,
     ): Response
     {
         if($telegramRequest->request() instanceof TelegramRequestInterface)
         {
-            $messageDispatch->dispatch(
-                new TelegramEndpointMessage($telegramRequest->request()),
-                transport: 'telegram-bot'
-            );
+            $Deduplicator = $deduplicator
+                ->namespace('telegram')
+                ->deduplication([var_export($telegramRequest->request(), true)]);
+
+            if($Deduplicator->isExecuted())
+            {
+                return new JsonResponse(['success']);
+            }
+
+            $Deduplicator->save();
+
+            $messageDispatch->dispatch(new TelegramEndpointMessage($telegramRequest->request()));
         }
 
         return new JsonResponse(['success']);
