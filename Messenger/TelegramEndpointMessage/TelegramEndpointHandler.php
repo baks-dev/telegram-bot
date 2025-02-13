@@ -33,7 +33,6 @@ use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 #[AsMessageHandler(priority: -999)]
 final class TelegramEndpointHandler
 {
-
     public function __construct(private TelegramSendMessages $telegramSendMessage) {}
 
     /**

@@ -43,17 +43,18 @@ final class TelegramBotModifyListener
     public function __construct(
         RequestStack $request,
         TokenStorageInterface $token,
-    ) {
+    )
+    {
         $this->request = $request;
         $this->token = $token;
     }
-    
+
     public function prePersist(TelegramBotSettingsModify $data, LifecycleEventArgs $event): void
     {
         $token = $this->token->getToken();
 
-        if ($token) {
-
+        if($token)
+        {
             $data->setUsr($token->getUser());
 
             if($token instanceof SwitchUserToken)
@@ -65,7 +66,7 @@ final class TelegramBotModifyListener
         }
 
         /* Если пользователь не из консоли */
-        if ($this->request->getCurrentRequest())
+        if($this->request->getCurrentRequest())
         {
             $data->upModifyAgent(
                 new IpAddress($this->request->getCurrentRequest()->getClientIp()), /* Ip */

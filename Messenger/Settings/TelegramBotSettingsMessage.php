@@ -29,28 +29,30 @@ use BaksDev\Telegram\Bot\Type\Settings\Event\TelegramBotSettingsEventUid;
 
 final class TelegramBotSettingsMessage
 {
-
     /** Идентификатор события */
-    private TelegramBotSettingsEventUid $event;
+    private string $event;
 
     /** Идентификатор предыдущего события */
-    private ?TelegramBotSettingsEventUid $last;
+    private ?string $last;
 
-    public function __construct(TelegramBotSettingsEventUid $event, ?TelegramBotSettingsEventUid $last = null)
+    public function __construct(
+        TelegramBotSettingsEventUid|string $event,
+        TelegramBotSettingsEventUid|string|null $last = null
+    )
     {
-        $this->last = $last;
-        $this->event = $event;
+        $this->event = (string) $event;
+        $this->last = $last ? (string) $last : null;
     }
 
     /** Идентификатор события */
     public function getEvent(): TelegramBotSettingsEventUid
     {
-        return $this->event;
+        return new TelegramBotSettingsEventUid($this->event);
     }
 
     /** Идентификатор предыдущего события */
     public function getLast(): ?TelegramBotSettingsEventUid
     {
-        return $this->last;
+        return $this->last ? new TelegramBotSettingsEventUid($this->last) : null;
     }
 }

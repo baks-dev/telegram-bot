@@ -29,29 +29,20 @@ use BaksDev\Auth\Telegram\Repository\ActiveProfileByAccountTelegram\ActiveProfil
 use BaksDev\Telegram\Api\TelegramSendMessages;
 use BaksDev\Telegram\Bot\Messenger\TelegramEndpointMessage\TelegramEndpointMessage;
 use BaksDev\Telegram\Request\Type\TelegramRequestMessage;
+use BaksDev\Users\Profile\UserProfile\Type\Id\UserProfileUid;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
 #[AsMessageHandler(priority: 999)]
-final class TelegramMenuHandler
+final readonly class TelegramMenuHandler
 {
-    private TelegramSendMessages $telegramSendMessage;
-    private UrlGeneratorInterface $urlGenerator;
-    private ActiveProfileByAccountTelegramInterface $activeProfileByAccountTelegram;
-
     public function __construct(
-        #[Autowire(env: 'HOST')] private readonly string $HOST,
-        TelegramSendMessages $telegramSendMessage,
-        UrlGeneratorInterface $urlGenerator,
-        ActiveProfileByAccountTelegramInterface $activeProfileByAccountTelegram,
-    )
-    {
-
-        $this->telegramSendMessage = $telegramSendMessage;
-        $this->urlGenerator = $urlGenerator;
-        $this->activeProfileByAccountTelegram = $activeProfileByAccountTelegram;
-    }
+        #[Autowire(env: 'HOST')] private string $HOST,
+        private TelegramSendMessages $telegramSendMessage,
+        private UrlGeneratorInterface $urlGenerator,
+        private ActiveProfileByAccountTelegramInterface $activeProfileByAccountTelegram,
+    ) {}
 
 
     /**
@@ -63,14 +54,20 @@ final class TelegramMenuHandler
         /** @var TelegramRequestMessage $TelegramRequest */
         $TelegramRequest = $message->getTelegramRequest();
 
-        if(!($TelegramRequest instanceof TelegramRequestMessage) || $TelegramRequest->getText() !== '/menu')
+        if(!($TelegramRequest instanceof TelegramRequestMessage))
         {
             return;
         }
 
-        $profile = $this->activeProfileByAccountTelegram->findByChat($TelegramRequest->getChatId());
+        if($TelegramRequest->getText() !== '/menu')
+        {
+            return;
+        }
 
-        if($profile !== null)
+        $profile = $this->activeProfileByAccountTelegram
+            ->findByChat($TelegramRequest->getChatId());
+
+        if(false === ($profile instanceof UserProfileUid))
         {
             return;
         }
@@ -88,7 +85,7 @@ final class TelegramMenuHandler
 
         $markup = json_encode([
             'inline_keyboard' => array_chunk($menu, 1),
-        ]);
+        ], JSON_THROW_ON_ERROR);
 
         $delete = [];
 
