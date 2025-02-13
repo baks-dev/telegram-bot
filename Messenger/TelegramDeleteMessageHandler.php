@@ -25,49 +25,31 @@ declare(strict_types=1);
 
 namespace BaksDev\Telegram\Bot\Messenger;
 
-use BaksDev\Auth\Email\Repository\AccountEventActiveByEmail\AccountEventActiveByEmailInterface;
-use BaksDev\Auth\Email\Type\Email\AccountEmail;
-use BaksDev\Auth\Telegram\Repository\AccountTelegramEvent\AccountTelegramEventInterface;
-use BaksDev\Auth\Telegram\Type\Status\AccountTelegramStatus\Collection\AccountTelegramStatusCollection;
-use BaksDev\Auth\Telegram\UseCase\Admin\NewEdit\AccountTelegramDTO;
-use BaksDev\Auth\Telegram\UseCase\Admin\NewEdit\AccountTelegramHandler;
-use BaksDev\Core\Cache\AppCacheInterface;
-use BaksDev\Manufacture\Part\Telegram\Type\ManufacturePartDone;
 use BaksDev\Telegram\Api\TelegramDeleteMessages;
-use BaksDev\Telegram\Api\TelegramSendMessages;
 use BaksDev\Telegram\Bot\Messenger\TelegramEndpointMessage\TelegramEndpointMessage;
-use BaksDev\Telegram\Request\TelegramRequest;
 use BaksDev\Telegram\Request\Type\TelegramRequestCallback;
-use BaksDev\Telegram\Request\Type\TelegramRequestIdentifier;
-use BaksDev\Telegram\Request\Type\TelegramRequestMessage;
-use Psr\Log\LoggerInterface;
-use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
-use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
-use Symfony\Contracts\Cache\CacheInterface;
 
 #[AsMessageHandler]
-final class TelegramDeleteMessageHandler
+final readonly class TelegramDeleteMessageHandler
 {
-    private TelegramDeleteMessages $telegramDeleteMessage;
 
-    public function __construct(
-        TelegramDeleteMessages $telegramDeleteMessage,
-    )
-    {
-        $this->telegramDeleteMessage = $telegramDeleteMessage;
-    }
-
+    public function __construct(private TelegramDeleteMessages $telegramDeleteMessage) {}
 
     /**
-     * Отправляет сообщение пользователю с требованием зарегистрироваться
+     * Удаляет сообщение при клике по кнопке telegram-delete-message
      */
     public function __invoke(TelegramEndpointMessage $message): void
     {
         /** @var TelegramRequestCallback $TelegramRequest */
         $TelegramRequest = $message->getTelegramRequest();
 
-        if(!($TelegramRequest instanceof TelegramRequestCallback) || $TelegramRequest->getCall() !== 'telegram-delete-message')
+        if(false === ($TelegramRequest instanceof TelegramRequestCallback))
+        {
+            return;
+        }
+
+        if($TelegramRequest->getCall() !== 'telegram-delete-message')
         {
             return;
         }
@@ -75,8 +57,7 @@ final class TelegramDeleteMessageHandler
         $this->telegramDeleteMessage
             ->chanel($TelegramRequest->getChatId())
             ->delete($TelegramRequest->getId())
-            ->send()
-        ;
+            ->send();
 
         $message->complete();
     }
