@@ -32,6 +32,7 @@ use BaksDev\Telegram\Bot\Messenger\TelegramEndpointMessage\TelegramEndpointMessa
 use BaksDev\Telegram\Request\TelegramRequest;
 use BaksDev\Telegram\Request\TelegramRequestInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Attribute\AsController;
 use Symfony\Component\Routing\Attribute\Route;
@@ -47,13 +48,17 @@ final class EndpointController extends AbstractController
         MessageDispatchInterface $messageDispatch,
         TelegramRequest $telegramRequest,
         DeduplicatorInterface $deduplicator,
+        Request $request,
     ): Response
     {
         if($telegramRequest->request() instanceof TelegramRequestInterface)
         {
             $Deduplicator = $deduplicator
                 ->namespace('telegram')
-                ->deduplication([var_export($telegramRequest->request(), true)]);
+                ->deduplication([
+                    var_export($telegramRequest->request()->getChat(), true),
+                    $telegramRequest->request()->getId(),
+                ]);
 
             if($Deduplicator->isExecuted())
             {
