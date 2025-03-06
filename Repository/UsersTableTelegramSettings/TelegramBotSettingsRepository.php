@@ -107,7 +107,7 @@ final class TelegramBotSettingsRepository implements TelegramBotSettingsInterfac
         /* Кешируем результат DBAL */
         $settings = $dbal->enableCache('telegram', 60)->fetchAssociative();
 
-        if($settings)
+        if(isset($settings['token']))
         {
             $this->token = $settings['token'];
             $this->secret = $settings['secret'];
