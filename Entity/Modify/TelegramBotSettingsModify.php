@@ -28,9 +28,9 @@ namespace BaksDev\Telegram\Bot\Entity\Modify;
 
 use BaksDev\Core\Entity\EntityEvent;
 use BaksDev\Core\Type\Ip\IpAddress;
-use BaksDev\Core\Type\Modify\ModifyAction;
 use BaksDev\Core\Type\Modify\Modify\ModifyActionNew;
 use BaksDev\Core\Type\Modify\Modify\ModifyActionUpdate;
+use BaksDev\Core\Type\Modify\ModifyAction;
 use BaksDev\Telegram\Bot\Entity\Event\TelegramBotSettingsEvent;
 use BaksDev\Users\User\Entity\User;
 use BaksDev\Users\User\Type\Id\UserUid;
@@ -47,12 +47,10 @@ use Symfony\Component\Validator\Constraints as Assert;
 #[ORM\Index(columns: ['action'])]
 class TelegramBotSettingsModify extends EntityEvent
 {
-    public const TABLE = 'telegram_bot_settings_modify';
-
     /** ID события */
     #[Assert\NotBlank]
     #[ORM\Id]
-    #[ORM\OneToOne(inversedBy: 'modify', targetEntity: TelegramBotSettingsEvent::class)]
+    #[ORM\OneToOne(targetEntity: TelegramBotSettingsEvent::class, inversedBy: 'modify')]
     #[ORM\JoinColumn(name: 'event', referencedColumnName: 'id')]
     private TelegramBotSettingsEvent $event;
 

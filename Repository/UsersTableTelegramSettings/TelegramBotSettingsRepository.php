@@ -60,9 +60,9 @@ final class TelegramBotSettingsRepository implements TelegramBotSettingsInterfac
             ->from(TelegramBotSettings::class, 'settings')
             ->where('settings.id = :identificator')
             ->setParameter(
-                'identificator',
-                new UsersTableTelegramSettingsIdentificator(),
-                UsersTableTelegramSettingsIdentificator::TYPE
+                key: 'identificator',
+                value: new UsersTableTelegramSettingsIdentificator(),
+                type: UsersTableTelegramSettingsIdentificator::TYPE
             );
 
         $orm
@@ -75,7 +75,9 @@ final class TelegramBotSettingsRepository implements TelegramBotSettingsInterfac
             );
 
         /* Кешируем результат ORM */
-        return $orm->enableCache('telegram', 60)->getOneOrNullResult();
+        return $orm
+            ->enableCache('telegram', '5 minutes')
+            ->getOneOrNullResult();
 
     }
 
@@ -89,13 +91,12 @@ final class TelegramBotSettingsRepository implements TelegramBotSettingsInterfac
             ->addSelect('event.secret')
             ->addSelect('event.url')
             ->from(TelegramBotSettings::class, 'settings')
-            ->where('settings.id = :identificator');
-
-        $dbal->setParameter(
-            'identificator',
-            new UsersTableTelegramSettingsIdentificator(),
-            UsersTableTelegramSettingsIdentificator::TYPE
-        );
+            ->where('settings.id = :identificator')
+            ->setParameter(
+                key: 'identificator',
+                value: new UsersTableTelegramSettingsIdentificator(),
+                type: UsersTableTelegramSettingsIdentificator::TYPE
+            );
 
         $dbal->leftJoin(
             'settings',
@@ -105,7 +106,9 @@ final class TelegramBotSettingsRepository implements TelegramBotSettingsInterfac
         );
 
         /* Кешируем результат DBAL */
-        $settings = $dbal->enableCache('telegram', 60)->fetchAssociative();
+        $settings = $dbal
+            ->enableCache('telegram', '5 minutes')
+            ->fetchAssociative();
 
         if(isset($settings['token']))
         {

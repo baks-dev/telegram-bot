@@ -37,8 +37,6 @@ use Doctrine\ORM\Mapping as ORM;
 #[ORM\Table(name: 'telegram_bot_settings')]
 class TelegramBotSettings extends EntityState
 {
-    public const TABLE = 'telegram_bot_settings';
-
     /** ID */
     #[ORM\Id]
     #[ORM\Column(type: UsersTableTelegramSettingsIdentificator::TYPE)]

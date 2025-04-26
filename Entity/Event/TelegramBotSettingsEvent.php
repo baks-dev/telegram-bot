@@ -42,8 +42,6 @@ use Symfony\Component\Validator\Constraints as Assert;
 #[ORM\Table(name: 'telegram_bot_settings_event')]
 class TelegramBotSettingsEvent extends EntityEvent
 {
-    public const TABLE = 'telegram_bot_settings_event';
-
     /**
      * Идентификатор события
      */
@@ -64,7 +62,7 @@ class TelegramBotSettingsEvent extends EntityEvent
     /**
      * Модификатор
      */
-    #[ORM\OneToOne(targetEntity: TelegramBotSettingsModify::class, mappedBy: 'event', cascade: ['all'])]
+    #[ORM\OneToOne(targetEntity: TelegramBotSettingsModify::class, mappedBy: 'event', cascade: ['all'], fetch: 'EAGER')]
     private TelegramBotSettingsModify $modify;
 
 
