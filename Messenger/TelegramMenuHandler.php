@@ -80,7 +80,7 @@ final readonly class TelegramMenuHandler
     {
         $menu[] = [
             'text' => 'Регистрация по QR',
-            'url' => 'https://'.$this->HOST.$this->urlGenerator->generate('auth-telegram:user.auth')
+            'url' => 'https://'.$this->HOST.$this->urlGenerator->generate('auth-telegram:public.auth')
         ];
 
         $markup = json_encode([
