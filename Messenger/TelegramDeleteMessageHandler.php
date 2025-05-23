@@ -1,6 +1,6 @@
 <?php
 /*
- *  Copyright 2024.  Baks.dev <admin@baks.dev>
+ *  Copyright 2025.  Baks.dev <admin@baks.dev>
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a copy
  *  of this software and associated documentation files (the "Software"), to deal
@@ -19,6 +19,7 @@
  *  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
+ *
  */
 
 declare(strict_types=1);
@@ -30,15 +31,19 @@ use BaksDev\Telegram\Bot\Messenger\TelegramEndpointMessage\TelegramEndpointMessa
 use BaksDev\Telegram\Request\Type\TelegramRequestCallback;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 
+
+/**
+ * Удаляет сообщение при клике по кнопке telegram-delete-message
+ */
 #[AsMessageHandler]
 final readonly class TelegramDeleteMessageHandler
 {
+    public const string KEY = 'telegram-delete-message';
 
-    public function __construct(private TelegramDeleteMessages $telegramDeleteMessage) {}
+    public function __construct(
+        private TelegramDeleteMessages $telegramDeleteMessage
+    ) {}
 
-    /**
-     * Удаляет сообщение при клике по кнопке telegram-delete-message
-     */
     public function __invoke(TelegramEndpointMessage $message): void
     {
         /** @var TelegramRequestCallback $TelegramRequest */
@@ -49,7 +54,7 @@ final readonly class TelegramDeleteMessageHandler
             return;
         }
 
-        if($TelegramRequest->getCall() !== 'telegram-delete-message')
+        if($TelegramRequest->getCall() !== self::KEY)
         {
             return;
         }

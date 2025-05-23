@@ -1,6 +1,6 @@
 <?php
 /*
- *  Copyright 2023.  Baks.dev <admin@baks.dev>
+ *  Copyright 2025.  Baks.dev <admin@baks.dev>
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a copy
  *  of this software and associated documentation files (the "Software"), to deal
@@ -19,6 +19,7 @@
  *  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
+ *
  */
 
 declare(strict_types=1);
@@ -31,6 +32,7 @@ use BaksDev\Core\Messenger\MessageDispatchInterface;
 use BaksDev\Telegram\Bot\Messenger\TelegramEndpointMessage\TelegramEndpointMessage;
 use BaksDev\Telegram\Request\TelegramRequest;
 use BaksDev\Telegram\Request\TelegramRequestInterface;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -48,6 +50,7 @@ final class EndpointController extends AbstractController
         MessageDispatchInterface $messageDispatch,
         TelegramRequest $telegramRequest,
         DeduplicatorInterface $deduplicator,
+        LoggerInterface $telegramLogger,
         Request $request,
     ): Response
     {
@@ -68,9 +71,13 @@ final class EndpointController extends AbstractController
             $Deduplicator->save();
 
             $messageDispatch->dispatch(new TelegramEndpointMessage($telegramRequest->request()));
+
+            return new JsonResponse(['success']);
         }
 
-        return new JsonResponse(['success']);
+        $telegramLogger->warning('Telegram Endpoint not handle', [$telegramRequest->request()]);
+
+        return new JsonResponse(['failure']);
     }
 }
 
