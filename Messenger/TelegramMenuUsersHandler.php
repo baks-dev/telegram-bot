@@ -88,7 +88,7 @@ final class TelegramMenuUsersHandler
 
         if(is_null($this->sectionId))
         {
-            $this->logger->critical('Ошибка получения идентификатора раздела', [$telegramRequest->getCall()]);
+            $this->logger->warning(__CLASS__.':'.__LINE__.'Ошибка получения идентификатора раздела', [$telegramRequest->getCall()]);
             return;
         }
 
@@ -104,7 +104,7 @@ final class TelegramMenuUsersHandler
 
         if(false === ($profile instanceof UserProfileUid))
         {
-            $this->logger->critical('Запрос от не авторизированного пользователя');
+            $this->logger->warning(__CLASS__.':'.__LINE__.'Запрос от не авторизированного пользователя');
             return;
         }
 
@@ -118,7 +118,7 @@ final class TelegramMenuUsersHandler
 
         if(is_null($authority))
         {
-            $this->logger->critical('Не найден идентификатор $authority');
+            $this->logger->warning(__CLASS__.':'.__LINE__.'Не найден идентификатор $authority');
             return;
         }
 
@@ -133,7 +133,7 @@ final class TelegramMenuUsersHandler
         /** Меню пустое если у пользователя нет доступов */
         if(is_null($authorityMenu))
         {
-            $this->logger->critical('У данного профиля нет доступа к разделу меню', [$profile, $this->sectionHeader]);
+            $this->logger->warning(__CLASS__.':'.__LINE__.'У данного профиля нет доступа к разделу меню', [$profile, $this->sectionHeader]);
 
             /** Клавиатура */
             $inlineKeyboard = new ReplyKeyboardMarkup;
@@ -157,12 +157,10 @@ final class TelegramMenuUsersHandler
             return;
         }
 
-        $inlineKeyboard = $this->keyboard($authorityMenu, $authority);
+        $inlineKeyboard = $this->keyboard($authorityMenu);
 
         if(is_null($inlineKeyboard))
         {
-            $this->logger->critical('Ошибка создания клавиатуры для чата');
-
             /** Клавиатура */
             $inlineKeyboard = new ReplyKeyboardMarkup;
             /** Кнопка назад */
@@ -272,7 +270,7 @@ final class TelegramMenuUsersHandler
 
             if($callbackDataSize > 64)
             {
-                $this->logger->critical('Ошибка создания клавиатуры для чата: Превышен максимальный размер callback_data', [$callbackData, $callbackDataSize]);
+                $this->logger->critical(__CLASS__.':'.__LINE__.'Ошибка создания клавиатуры для чата: Превышен максимальный размер callback_data', [$callbackData, $callbackDataSize]);
                 return null;
             }
 

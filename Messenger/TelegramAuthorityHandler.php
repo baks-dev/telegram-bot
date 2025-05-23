@@ -78,7 +78,7 @@ final readonly class TelegramAuthorityHandler
 
         if(false === ($profile instanceof UserProfileUid))
         {
-            $this->logger->warning('Запрос от не авторизированного пользователя', [$profile]);
+            $this->logger->warning(__CLASS__.':'.__LINE__.'Запрос от не авторизированного пользователя', [$profile]);
             return;
         }
 
@@ -87,7 +87,7 @@ final readonly class TelegramAuthorityHandler
 
         if(is_null($userProfileMenu))
         {
-            $this->logger->warning('Отсутствуют доверенности', [$profile]);
+            $this->logger->warning(__CLASS__.':'.__LINE__.'Отсутствуют доверенности', [$profile]);
             return;
         }
 
@@ -135,7 +135,7 @@ final readonly class TelegramAuthorityHandler
 
             if($callbackDataSize > 64)
             {
-                $this->logger->critical('Ошибка создания клавиатуры для чата: Превышен максимальный размер callback_data', [$callbackData, $callbackDataSize]);
+                $this->logger->critical(__CLASS__.':'.__LINE__.'Ошибка создания клавиатуры для чата: Превышен максимальный размер callback_data', [$callbackData, $callbackDataSize]);
                 return null;
             }
 

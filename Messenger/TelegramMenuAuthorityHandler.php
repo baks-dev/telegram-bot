@@ -90,7 +90,7 @@ final readonly class TelegramMenuAuthorityHandler
 
         if(false === ($profile instanceof UserProfileUid))
         {
-            $this->logger->warning('Запрос от не авторизированного пользователя');
+            $this->logger->warning(__CLASS__.':'.__LINE__.'Запрос от не авторизированного пользователя');
             return;
         }
 
@@ -99,7 +99,7 @@ final readonly class TelegramMenuAuthorityHandler
 
         if(is_null($authority))
         {
-            $this->logger->warning('Не передан идентификатор профиля $authority');
+            $this->logger->warning(__CLASS__.':'.__LINE__.'Не передан идентификатор профиля $authority');
             return;
         }
 
@@ -121,7 +121,7 @@ final readonly class TelegramMenuAuthorityHandler
         /** Меню пустое если у пользователя нет доступов */
         if(is_null($authorityMenu))
         {
-            $this->logger->warning('У данного профиля нет доступа к разделам меню в этом магазине', ['$profile' => $profile]);
+            $this->logger->warning(__CLASS__.':'.__LINE__.'У данного профиля нет доступа к разделам меню в этом магазине', ['$profile' => $profile]);
 
             $this
                 ->telegramSendMessage
@@ -138,8 +138,6 @@ final readonly class TelegramMenuAuthorityHandler
 
         if(is_null($inlineKeyboard))
         {
-            $this->logger->critical('Ошибка создания клавиатуры для чата');
-
             /** Клавиатура */
             $inlineKeyboard = new ReplyKeyboardMarkup;
             /** Кнопка назад */
@@ -242,7 +240,7 @@ final readonly class TelegramMenuAuthorityHandler
 
             if($callbackDataSize > 64)
             {
-                $this->logger->critical('Ошибка создания клавиатуры для чата: Превышен максимальный размер callback_data', [$callbackData, $callbackDataSize]);
+                $this->logger->critical(__CLASS__.':'.__LINE__.'Ошибка создания клавиатуры для чата: Превышен максимальный размер callback_data', [$callbackData, $callbackDataSize]);
                 return null;
             }
 
