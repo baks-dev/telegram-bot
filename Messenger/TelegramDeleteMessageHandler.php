@@ -38,7 +38,7 @@ use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 #[AsMessageHandler]
 final readonly class TelegramDeleteMessageHandler
 {
-    public const string KEY = 'telegram-delete-message';
+    public const string DELETE_KEY = 'telegram-delete-message';
 
     public function __construct(
         private TelegramDeleteMessages $telegramDeleteMessage
@@ -54,7 +54,7 @@ final readonly class TelegramDeleteMessageHandler
             return;
         }
 
-        if($TelegramRequest->getCall() !== self::KEY)
+        if($TelegramRequest->getCall() !== self::DELETE_KEY)
         {
             return;
         }

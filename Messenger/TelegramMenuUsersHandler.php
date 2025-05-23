@@ -30,7 +30,7 @@ use BaksDev\Auth\Telegram\Repository\ActiveProfileByAccountTelegram\ActiveProfil
 use BaksDev\Core\Cache\AppCacheInterface;
 use BaksDev\Menu\Admin\Repository\MenuAdmin\MenuAdminInterface;
 use BaksDev\Menu\Admin\Repository\MenuAdmin\MenuAdminPathResult;
-use BaksDev\Menu\Admin\Type\Section\MenuAdminSectionUid;
+use BaksDev\Menu\Admin\Repository\MenuAdmin\MenuAdminResult;
 use BaksDev\Telegram\Api\TelegramSendMessages;
 use BaksDev\Telegram\Bot\Messenger\TelegramEndpointMessage\TelegramEndpointMessage;
 use BaksDev\Telegram\Bot\Repository\SecurityProfileIsGranted\TelegramSecurityInterface;
@@ -38,32 +38,36 @@ use BaksDev\Telegram\Builder\ReplyKeyboardMarkup\ReplyKeyboardButton;
 use BaksDev\Telegram\Builder\ReplyKeyboardMarkup\ReplyKeyboardMarkup;
 use BaksDev\Telegram\Request\Type\TelegramRequestCallback;
 use BaksDev\Users\Profile\UserProfile\Type\Id\UserProfileUid;
-use DateInterval;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\Attribute\Target;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 use Symfony\Contracts\Cache\CacheInterface;
 
 /**
- * Разделы меню к которым у пользователя есть доступ
+ * Раздел - Пользователи
  *
- * next @see TelegramMenuUsersHandler
+ * next @see TelegramUserTableHandler
  */
 #[AsMessageHandler()]
-final readonly class TelegramMenuAuthorityHandler
+final class TelegramMenuUsersHandler
 {
-    /** выбор профилей */
-    public const string KEY = 'C22HJ3I9qtH';
+    public const string KEY = 'Vt5J0sVV69M';
+
+    /** Заголовок раздела */
+    private string|null $sectionHeader = null;
+
+    /** Идентификатор раздела */
+    private string|null $sectionId = null;
 
     private CacheInterface $cache;
 
     public function __construct(
-        #[Target('telegramLogger')] private LoggerInterface $logger,
-        private AppCacheInterface $appCache,
-        private TelegramSendMessages $telegramSendMessage,
-        private ActiveProfileByAccountTelegramInterface $activeProfileByAccountTelegram,
-        private TelegramSecurityInterface $telegramSecurity,
-        private MenuAdminInterface $MenuAdmin,
+        #[Target('telegramLogger')] private readonly LoggerInterface $logger,
+        private readonly AppCacheInterface $appCache,
+        private readonly ActiveProfileByAccountTelegramInterface $activeProfileByAccountTelegram,
+        private readonly TelegramSecurityInterface $telegramSecurity,
+        private readonly MenuAdminInterface $MenuAdmin,
+        private readonly TelegramSendMessages|null $telegramSendMessage,
     )
     {
         $this->cache = $appCache->init('telegram');
@@ -79,6 +83,15 @@ final readonly class TelegramMenuAuthorityHandler
             return;
         }
 
+        /** Получаем идентификатор секции меню из callback_data */
+        $this->sectionId = $telegramRequest->getIdentifier();
+
+        if(is_null($this->sectionId))
+        {
+            $this->logger->critical('Ошибка получения идентификатора раздела', [$telegramRequest->getCall()]);
+            return;
+        }
+
         /** Проверка идентификатора кнопки */
         if(false === ($telegramRequest->getCall() === self::KEY))
         {
@@ -86,32 +99,31 @@ final readonly class TelegramMenuAuthorityHandler
         }
 
         /** Профиль пользователя по id телеграм чата */
-        $profile = $this->activeProfileByAccountTelegram->findByChat($telegramRequest->getChatId());
+        $profile = $this->activeProfileByAccountTelegram
+            ->findByChat($telegramRequest->getChatId());
 
         if(false === ($profile instanceof UserProfileUid))
         {
-            $this->logger->warning('Запрос от не авторизированного пользователя');
+            $this->logger->critical('Запрос от не авторизированного пользователя');
             return;
         }
 
-        /** Идентификатор профиля, к которому есть доступ */
-        $authority = $telegramRequest->getIdentifier();
+        $cacheKey = md5($telegramRequest->getChatId().$profile);
+
+        /**
+         * Идентификатор профиля, к которому есть доступ
+         * @var UserProfileUid|null $authority
+         */
+        $authority = $this->cache->getItem($cacheKey)->get();
 
         if(is_null($authority))
         {
-            $this->logger->warning('Не передан идентификатор профиля $authority');
+            $this->logger->critical('Не найден идентификатор $authority');
             return;
         }
 
-        /** Всегда пересохраняем идентификатор в коревом разделе меню */
-        $cacheKey = md5($telegramRequest->getChatId().$profile);
-        $cacheItem = $this->cache->getItem($cacheKey);
-        $cacheItem->expiresAfter(DateInterval::createFromDateString('1 day'));
-        $cacheItem->set($authority);
-        $this->cache->save($cacheItem);
-
-        /** Строим корневое меню */
-        $authorityMenu = $this->authorityRootMenu($profile, $authority);
+        /** Строим меню с разделами */
+        $authorityMenu = $this->authorityMenuSections($profile, $authority);
 
         /** Готовим сообщение для отправки */
         $this
@@ -121,12 +133,23 @@ final readonly class TelegramMenuAuthorityHandler
         /** Меню пустое если у пользователя нет доступов */
         if(is_null($authorityMenu))
         {
-            $this->logger->warning('У данного профиля нет доступа к разделам меню в этом магазине', ['$profile' => $profile]);
+            $this->logger->critical('У данного профиля нет доступа к разделу меню', [$profile, $this->sectionHeader]);
 
+            /** Клавиатура */
+            $inlineKeyboard = new ReplyKeyboardMarkup;
+            /** Кнопка назад */
+            $inlineKeyboard->addNewRow(
+                (new ReplyKeyboardButton)
+                    ->setText('Выход')
+                    ->setCallbackData(TelegramDeleteMessageHandler::DELETE_KEY)
+            );
+
+            /** Сообщаем об ошибке */
             $this
                 ->telegramSendMessage
-                ->chanel($telegramRequest->getChatId())
-                ->message('Нет доступа к разделам меню в этом магазине')
+                ->message('<b>Нет доступа к секциям это раздела</b>')
+                ->markup($inlineKeyboard)
+                ->delete([$telegramRequest->getId(), $telegramRequest->getLast()])
                 ->send();
 
             $message->complete();
@@ -134,7 +157,7 @@ final readonly class TelegramMenuAuthorityHandler
             return;
         }
 
-        $inlineKeyboard = $this->keyboard($authorityMenu);
+        $inlineKeyboard = $this->keyboard($authorityMenu, $authority);
 
         if(is_null($inlineKeyboard))
         {
@@ -145,7 +168,7 @@ final readonly class TelegramMenuAuthorityHandler
             /** Кнопка назад */
             $inlineKeyboard->addNewRow(
                 (new ReplyKeyboardButton)
-                    ->setText('Выход')
+                    ->setText('Назад')
                     ->setCallbackData(TelegramDeleteMessageHandler::DELETE_KEY)
             );
 
@@ -162,9 +185,10 @@ final readonly class TelegramMenuAuthorityHandler
         }
 
         /** Отправляем действие с клавиатурой */
+        $text = $this->sectionHeader ?? 'Выберите секцию раздела';
         $this
             ->telegramSendMessage
-            ->message('<b>Выберите раздел</b>')
+            ->message("<b>$text</b>")
             ->markup($inlineKeyboard)
             ->delete([$telegramRequest->getId(), $telegramRequest->getLast()])
             ->send();
@@ -172,30 +196,34 @@ final readonly class TelegramMenuAuthorityHandler
         $message->complete();
     }
 
-    /** Корневое меню */
-    private function authorityRootMenu(UserProfileUid|string $profile, UserProfileUid|string $authority): array|null
+    /**
+     * Секции корневого раздела
+     * @return array<int, MenuAdminPathResult>|null
+     */
+    private function authorityMenuSections(UserProfileUid|string $profile, UserProfileUid|string $authority): array|null
     {
         /** Получаем разделы и подразделы меню */
         $menu = $this->MenuAdmin->find();
 
         /**
-         * Перестроенное меню из разделов, с учетом наличие доступов по ролям
-         * @var array<string, string>|null $authorityMenu
+         * Фильтруем по соответствию идентификатору раздела, полученного из callback_data
          */
-        $authorityMenu = null;
+        $menuSections = array_filter($menu, function(MenuAdminResult $menuRoot) {
+            return (string) $menuRoot->getSectionId() === $this->sectionId;
+        });
 
-        foreach($menu as $menuRoot)
+        /**
+         * Перестроенное меню из секций разделов, с учетом наличие доступов по ролям
+         * @var array<int, MenuAdminPathResult>|null $authorityMenu
+         */
+        $authoritySections = null;
+
+        foreach($menuSections as $menuRoot)
         {
-
             /**
              * Фильтруем секции в каждом из разделов меню
              */
             $rootSections = $menuRoot->getPath();
-
-            if(is_null($rootSections))
-            {
-                continue;
-            }
 
             /** @var MenuAdminPathResult $section */
             $authRootSections = array_filter($rootSections, function(object $section) use (
@@ -204,40 +232,42 @@ final readonly class TelegramMenuAuthorityHandler
                 $menuRoot,
             ) {
 
-                /** Проверка доступа к секции меню по роли */
-                return $this->telegramSecurity->isGranted(
+                /** Доступ к секции по роли */
+                $isGranted = $this->telegramSecurity->isGranted(
                     $profile,
                     $section->getRole(),
                     $authority
                 );
+
+                /** Если нет ссылки - это заголовок секции */
+                $isSectionHeader = ($section->getHref() !== null);
+
+                return true === $isGranted && true === $isSectionHeader;
             });
 
             /** Если есть доступ по роли - добавляем раздел с доступными секциями меню */
             if(false === empty($authRootSections))
             {
-                /**
-                 * $menuRoot['name'] - название раздела
-                 * $menuRoot['id'] - id раздела
-                 */
-                $authorityMenu[$menuRoot->getName()] = $menuRoot->getSectionId();
+                $this->sectionHeader = $menuRoot->getName();
+                $authoritySections = $authRootSections;
             }
         }
 
-        return $authorityMenu;
+        return $authoritySections;
     }
 
+    /**
+     * @param array<int, MenuAdminPathResult> $menu
+     */
     private function keyboard(array $menu): array|null
     {
-        $inlineKeyboard = new ReplyKeyboardMarkup;
-        $inlineKeyboard->setMaxRowButtons(1);
 
-        /**
-         * @var string $menuName - название раздела меню
-         * @var MenuAdminSectionUid $menuSection - идентификатор для обозначения принадлежности всех кнопок определенной секции меню
-         */
-        foreach($menu as $menuName => $menuSection)
+        $inlineKeyboard = new ReplyKeyboardMarkup;
+
+        foreach($menu as $menuSection)
         {
-            $callbackData = TelegramMenuUsersHandler::KEY.'|'.$menuSection;
+            $callbackData = $menuSection->getKey().'| ';
+
             $callbackDataSize = strlen($callbackData);
 
             if($callbackDataSize > 64)
@@ -248,10 +278,10 @@ final readonly class TelegramMenuAuthorityHandler
 
             $button = new ReplyKeyboardButton;
             $button
-                ->setText($menuName)
+                ->setText($menuSection->getName()) // название раздела меню
                 ->setCallbackData($callbackData);
 
-            $inlineKeyboard->addCurrentRow($button);
+            $inlineKeyboard->addNewRow($button);
         }
 
         /** Кнопка назад */

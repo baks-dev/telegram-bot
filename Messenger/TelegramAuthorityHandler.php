@@ -33,7 +33,6 @@ use BaksDev\Telegram\Bot\Messenger\TelegramEndpointMessage\TelegramEndpointMessa
 use BaksDev\Telegram\Builder\ReplyKeyboardMarkup\ReplyKeyboardButton;
 use BaksDev\Telegram\Builder\ReplyKeyboardMarkup\ReplyKeyboardMarkup;
 use BaksDev\Telegram\Request\Type\TelegramBotCommands;
-use BaksDev\Telegram\Request\Type\TelegramRequestCallback;
 use BaksDev\Telegram\Request\Type\TelegramRequestMessage;
 use BaksDev\Users\Profile\UserProfile\Type\Id\UserProfileUid;
 use Psr\Log\LoggerInterface;
@@ -48,9 +47,6 @@ use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 #[AsMessageHandler()]
 final readonly class TelegramAuthorityHandler
 {
-    public const string DELETE_KEY = 'cSD9nph';
-
-    public const string KEY = 'WZjeBkwY';
 
     public function __construct(
         #[Target('telegramLogger')] private LoggerInterface $logger,
@@ -62,13 +58,8 @@ final readonly class TelegramAuthorityHandler
     /** */
     public function __invoke(TelegramEndpointMessage $message): void
     {
-
         /** @var TelegramRequestMessage $telegramRequest */
         $telegramRequest = $message->getTelegramRequest();
-
-        $this
-            ->telegramSendMessage
-            ->chanel($telegramRequest->getChatId());
 
         if(false === ($telegramRequest instanceof TelegramRequestMessage))
         {
@@ -87,7 +78,7 @@ final readonly class TelegramAuthorityHandler
 
         if(false === ($profile instanceof UserProfileUid))
         {
-            $this->logger->critical('Запрос от не авторизированного пользователя', [$profile]);
+            $this->logger->warning('Запрос от не авторизированного пользователя', [$profile]);
             return;
         }
 
@@ -96,17 +87,20 @@ final readonly class TelegramAuthorityHandler
 
         if(is_null($userProfileMenu))
         {
-            $this->logger->critical('Отсутствуют доверенности', [$profile]);
+            $this->logger->warning('Отсутствуют доверенности', [$profile]);
             return;
         }
+
+        /** Готовим сообщение для отправки */
+        $this
+            ->telegramSendMessage
+            ->chanel($telegramRequest->getChatId());
 
         /** Клавиатура с выбором профилей */
         $inlineKeyboard = $this->keyboard($userProfileMenu);
 
         if(is_null($inlineKeyboard))
         {
-            $this->logger->critical('Ошибка создания клавиатуры для чата');
-
             /** Сообщаем об ошибке */
             $this
                 ->telegramSendMessage
@@ -136,7 +130,7 @@ final readonly class TelegramAuthorityHandler
 
         foreach($menu as $menuSection)
         {
-            $callbackData = self::KEY.'|'.$menuSection['authority'];
+            $callbackData = TelegramMenuAuthorityHandler::KEY.'|'.$menuSection['authority'];
             $callbackDataSize = strlen($callbackData);
 
             if($callbackDataSize > 64)
@@ -153,6 +147,14 @@ final readonly class TelegramAuthorityHandler
 
             $inlineKeyboard->addNewRow($button);
         }
+
+        /** Кнопка назад */
+        $backButton = new ReplyKeyboardButton;
+        $backButton
+            ->setText('Выход')
+            ->setCallbackData(TelegramDeleteMessageHandler::DELETE_KEY);
+
+        $inlineKeyboard->addNewRow($backButton);
 
         return $inlineKeyboard->build();
     }

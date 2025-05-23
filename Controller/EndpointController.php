@@ -32,7 +32,6 @@ use BaksDev\Core\Messenger\MessageDispatchInterface;
 use BaksDev\Telegram\Bot\Messenger\TelegramEndpointMessage\TelegramEndpointMessage;
 use BaksDev\Telegram\Request\TelegramRequest;
 use BaksDev\Telegram\Request\TelegramRequestInterface;
-use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -50,7 +49,6 @@ final class EndpointController extends AbstractController
         MessageDispatchInterface $messageDispatch,
         TelegramRequest $telegramRequest,
         DeduplicatorInterface $deduplicator,
-        LoggerInterface $telegramLogger,
         Request $request,
     ): Response
     {
@@ -71,13 +69,9 @@ final class EndpointController extends AbstractController
             $Deduplicator->save();
 
             $messageDispatch->dispatch(new TelegramEndpointMessage($telegramRequest->request()));
-
-            return new JsonResponse(['success']);
         }
 
-        $telegramLogger->warning('Telegram Endpoint not handle', [$telegramRequest->request()]);
-
-        return new JsonResponse(['failure']);
+        return new JsonResponse(['success']);
     }
 }
 
