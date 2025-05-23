@@ -1,6 +1,6 @@
 <?php
 /*
- *  Copyright 2024.  Baks.dev <admin@baks.dev>
+ *  Copyright 2025.  Baks.dev <admin@baks.dev>
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a copy
  *  of this software and associated documentation files (the "Software"), to deal
@@ -19,6 +19,7 @@
  *  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
+ *
  */
 
 declare(strict_types=1);
@@ -28,6 +29,7 @@ namespace BaksDev\Telegram\Bot\Messenger;
 use BaksDev\Auth\Telegram\Repository\ActiveProfileByAccountTelegram\ActiveProfileByAccountTelegramInterface;
 use BaksDev\Telegram\Api\TelegramSendMessages;
 use BaksDev\Telegram\Bot\Messenger\TelegramEndpointMessage\TelegramEndpointMessage;
+use BaksDev\Telegram\Request\Type\TelegramBotCommands;
 use BaksDev\Telegram\Request\Type\TelegramRequestMessage;
 use BaksDev\Users\Profile\UserProfile\Type\Id\UserProfileUid;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
@@ -54,12 +56,13 @@ final readonly class TelegramMenuHandler
         /** @var TelegramRequestMessage $TelegramRequest */
         $TelegramRequest = $message->getTelegramRequest();
 
-        if(!($TelegramRequest instanceof TelegramRequestMessage))
+        if(false === ($TelegramRequest instanceof TelegramRequestMessage))
         {
             return;
         }
 
-        if($TelegramRequest->getText() !== '/menu')
+        /** Проверка текста сообщения по соответствию установленной команде бота */
+        if(false === (in_array($TelegramRequest->getText(), TelegramBotCommands::START->command())))
         {
             return;
         }
