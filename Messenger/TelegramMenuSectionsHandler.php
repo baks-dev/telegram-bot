@@ -28,9 +28,10 @@ namespace BaksDev\Telegram\Bot\Messenger;
 
 use BaksDev\Auth\Telegram\Repository\ActiveProfileByAccountTelegram\ActiveProfileByAccountTelegramInterface;
 use BaksDev\Core\Cache\AppCacheInterface;
+use BaksDev\Menu\Admin\Repository\IsMenuSection\IsMenuSectionInterface;
 use BaksDev\Menu\Admin\Repository\MenuAdmin\MenuAdminInterface;
 use BaksDev\Menu\Admin\Repository\MenuAdmin\MenuAdminPathResult;
-use BaksDev\Menu\Admin\Repository\MenuAdmin\MenuAdminResult;
+use BaksDev\Menu\Admin\Repository\MenuAdminBySectionId\MenuAdminBySectionIdInterface;
 use BaksDev\Telegram\Api\TelegramSendMessages;
 use BaksDev\Telegram\Bot\Messenger\TelegramEndpointMessage\TelegramEndpointMessage;
 use BaksDev\Telegram\Bot\Repository\SecurityProfileIsGranted\TelegramSecurityInterface;
@@ -44,12 +45,12 @@ use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 use Symfony\Contracts\Cache\CacheInterface;
 
 /**
- * Раздел - Пользователи
+ * Секции выбранного раздела, к которым у пользователя есть доступ
  *
  * next @see TelegramUserTableHandler
  */
 #[AsMessageHandler()]
-final class TelegramMenuUsersHandler
+final class TelegramMenuSectionsHandler
 {
     public const string KEY = 'Vt5J0sVV69M';
 
@@ -66,7 +67,7 @@ final class TelegramMenuUsersHandler
         private readonly AppCacheInterface $appCache,
         private readonly ActiveProfileByAccountTelegramInterface $activeProfileByAccountTelegram,
         private readonly TelegramSecurityInterface $telegramSecurity,
-        private readonly MenuAdminInterface $MenuAdmin,
+        private readonly MenuAdminBySectionIdInterface $menuAdminBySection,
         private readonly TelegramSendMessages|null $telegramSendMessage,
     )
     {
@@ -200,54 +201,36 @@ final class TelegramMenuUsersHandler
      */
     private function authorityMenuSections(UserProfileUid|string $profile, UserProfileUid|string $authority): array|null
     {
-        /** Получаем разделы и подразделы меню */
-        $menu = $this->MenuAdmin->find();
+        /** Получаем секции по идентификатору раздела, полученного из callback_data */
+        $menuSections = $this->menuAdminBySection->findOneBy($this->sectionId);
+
+        $sections = $menuSections->getPath();
+
+        if(is_null($sections))
+        {
+            return null;
+        }
 
         /**
-         * Фильтруем по соответствию идентификатору раздела, полученного из callback_data
-         */
-        $menuSections = array_filter($menu, function(MenuAdminResult $menuRoot) {
-            return (string) $menuRoot->getSectionId() === $this->sectionId;
-        });
-
-        /**
-         * Перестроенное меню из секций разделов, с учетом наличие доступов по ролям
+         * Перестроенное меню из секций раздела, с учетом наличие доступов по ролям
          * @var array<int, MenuAdminPathResult>|null $authorityMenu
          */
         $authoritySections = null;
 
-        foreach($menuSections as $menuRoot)
+        foreach($menuSections->getPath() as $section)
         {
-            /**
-             * Фильтруем секции в каждом из разделов меню
-             */
-            $rootSections = $menuRoot->getPath();
-
-            /** @var MenuAdminPathResult $section */
-            $authRootSections = array_filter($rootSections, function(object $section) use (
+            /** Доступ к секции по роли */
+            $isGranted = $this->telegramSecurity->isGranted(
                 $profile,
-                $authority,
-                $menuRoot,
-            ) {
+                $section->getRole(),
+                $authority
+            );
 
-                /** Доступ к секции по роли */
-                $isGranted = $this->telegramSecurity->isGranted(
-                    $profile,
-                    $section->getRole(),
-                    $authority
-                );
-
-                /** Если нет ссылки - это заголовок секции */
-                $isSectionHeader = ($section->getHref() !== null);
-
-                return true === $isGranted && true === $isSectionHeader;
-            });
-
-            /** Если есть доступ по роли - добавляем раздел с доступными секциями меню */
-            if(false === empty($authRootSections))
+            /** Если есть доступ по роли это не заголовок секции - перестраиваем меню */
+            if($isGranted and $section->isNotSectionHeader())
             {
-                $this->sectionHeader = $menuRoot->getName();
-                $authoritySections = $authRootSections;
+                $this->sectionHeader = $section->getName();
+                $authoritySections[] = $section;
             }
         }
 
