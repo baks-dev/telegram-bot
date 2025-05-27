@@ -28,8 +28,6 @@ namespace BaksDev\Telegram\Bot\Messenger;
 
 use BaksDev\Auth\Telegram\Repository\ActiveProfileByAccountTelegram\ActiveProfileByAccountTelegramInterface;
 use BaksDev\Core\Cache\AppCacheInterface;
-use BaksDev\Menu\Admin\Repository\IsMenuSection\IsMenuSectionInterface;
-use BaksDev\Menu\Admin\Repository\MenuAdmin\MenuAdminInterface;
 use BaksDev\Menu\Admin\Repository\MenuAdmin\MenuAdminPathResult;
 use BaksDev\Menu\Admin\Repository\MenuAdminBySectionId\MenuAdminBySectionIdInterface;
 use BaksDev\Telegram\Api\TelegramSendMessages;
@@ -84,14 +82,15 @@ final class TelegramMenuSectionsHandler
             return;
         }
 
-        /** Получаем идентификатор секции меню из callback_data */
-        $this->sectionId = $telegramRequest->getIdentifier();
-
-        if(is_null($this->sectionId))
+        /** Проверка идентификатора секции меню из callback_data */
+        if(empty($telegramRequest->getIdentifier()))
         {
-            $this->logger->warning(__CLASS__.':'.__LINE__.'Ошибка получения идентификатора раздела', [$telegramRequest->getCall()]);
+            $this->logger->warning(__CLASS__.':'.__LINE__.'Ошибка получения идентификатора раздела', ['$telegramRequest->getIdentifier()' => $telegramRequest->getIdentifier()]);
             return;
         }
+
+        /** Присваиваем идентификатора секции меню из callback_data */
+        $this->sectionId = $telegramRequest->getIdentifier();
 
         /** Проверка идентификатора кнопки */
         if(false === ($telegramRequest->getCall() === self::KEY))
@@ -202,7 +201,9 @@ final class TelegramMenuSectionsHandler
     private function authorityMenuSections(UserProfileUid|string $profile, UserProfileUid|string $authority): array|null
     {
         /** Получаем секции по идентификатору раздела, полученного из callback_data */
-        $menuSections = $this->menuAdminBySection->findOneBy($this->sectionId);
+        $menuSections = $this->menuAdminBySection
+            ->onSectionId($this->sectionId)
+            ->findOne();
 
         $sections = $menuSections->getPath();
 
