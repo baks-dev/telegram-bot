@@ -45,14 +45,13 @@ use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 use Symfony\Contracts\Cache\CacheInterface;
 
 /**
- * Разделы меню к которым у пользователя есть доступ
+ * Разделы меню, к которым у пользователя есть доступ
  *
- * next @see TelegramMenuUsersHandler
+ * next @see TelegramMenuSectionsHandler
  */
 #[AsMessageHandler()]
 final readonly class TelegramMenuAuthorityHandler
 {
-    /** выбор профилей */
     public const string KEY = 'C22HJ3I9qtH';
 
     private CacheInterface $cache;
@@ -174,7 +173,7 @@ final readonly class TelegramMenuAuthorityHandler
     private function authorityRootMenu(UserProfileUid|string $profile, UserProfileUid|string $authority): array|null
     {
         /** Получаем разделы и подразделы меню */
-        $menu = $this->MenuAdmin->find();
+        $menu = $this->MenuAdmin->findAll();
 
         /**
          * Перестроенное меню из разделов, с учетом наличие доступов по ролям
@@ -235,7 +234,7 @@ final readonly class TelegramMenuAuthorityHandler
          */
         foreach($menu as $menuName => $menuSection)
         {
-            $callbackData = TelegramMenuUsersHandler::KEY.'|'.$menuSection;
+            $callbackData = TelegramMenuSectionsHandler::KEY.'|'.$menuSection;
             $callbackDataSize = strlen($callbackData);
 
             if($callbackDataSize > 64)
