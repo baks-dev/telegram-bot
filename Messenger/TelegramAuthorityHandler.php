@@ -71,7 +71,7 @@ final readonly class TelegramAuthorityHandler
         }
 
         /** Проверка текста сообщения по значению команды */
-        if(false === (in_array($telegramRequest->getText(), TelegramBotCommands::MENU->command())))
+        if(false === (in_array($telegramRequest->getText(), TelegramBotCommands::MENU->commands())))
         {
             return;
         }

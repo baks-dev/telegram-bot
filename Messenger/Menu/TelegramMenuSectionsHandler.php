@@ -83,21 +83,21 @@ final class TelegramMenuSectionsHandler
             return;
         }
 
-        /** Проверка идентификатора секции меню из callback_data */
-        if(empty($telegramRequest->getIdentifier()))
-        {
-            $this->logger->warning(__CLASS__.':'.__LINE__.'Ошибка получения идентификатора раздела', ['$telegramRequest->getIdentifier()' => $telegramRequest->getIdentifier()]);
-            return;
-        }
-
-        /** Присваиваем идентификатора секции меню из callback_data */
-        $this->sectionId = $telegramRequest->getIdentifier();
-
         /** Проверка идентификатора кнопки */
         if(false === ($telegramRequest->getCall() === self::KEY))
         {
             return;
         }
+
+        /** Проверка идентификатора секции меню из callback_data */
+        if(empty($telegramRequest->getIdentifier()))
+        {
+            $this->logger->warning(__CLASS__.':'.__LINE__.' Ошибка получения идентификатора раздела', ['$telegramRequest->getIdentifier()' => $telegramRequest->getIdentifier()]);
+            return;
+        }
+
+        /** Присваиваем идентификатора секции меню из callback_data */
+        $this->sectionId = $telegramRequest->getIdentifier();
 
         /** Профиль пользователя по id телеграм чата */
         $profile = $this->activeProfileByAccountTelegram
