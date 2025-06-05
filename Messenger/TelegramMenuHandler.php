@@ -62,7 +62,7 @@ final readonly class TelegramMenuHandler
         }
 
         /** Проверка текста сообщения по соответствию установленной команде бота */
-        if(false === (in_array($TelegramRequest->getText(), TelegramBotCommands::START->command())))
+        if(false === (in_array($TelegramRequest->getText(), TelegramBotCommands::START->commands())))
         {
             return;
         }

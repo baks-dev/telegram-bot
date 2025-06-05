@@ -24,7 +24,7 @@
 
 declare(strict_types=1);
 
-namespace BaksDev\Telegram\Bot\Messenger;
+namespace BaksDev\Telegram\Bot\Messenger\Menu;
 
 use BaksDev\Auth\Telegram\Repository\ActiveProfileByAccountTelegram\ActiveProfileByAccountTelegramInterface;
 use BaksDev\Core\Cache\AppCacheInterface;
@@ -32,6 +32,7 @@ use BaksDev\Menu\Admin\Repository\MenuAdmin\MenuAdminInterface;
 use BaksDev\Menu\Admin\Repository\MenuAdmin\MenuAdminPathResult;
 use BaksDev\Menu\Admin\Type\Section\MenuAdminSectionUid;
 use BaksDev\Telegram\Api\TelegramSendMessages;
+use BaksDev\Telegram\Bot\Messenger\TelegramDeleteMessageHandler;
 use BaksDev\Telegram\Bot\Messenger\TelegramEndpointMessage\TelegramEndpointMessage;
 use BaksDev\Telegram\Bot\Repository\SecurityProfileIsGranted\TelegramSecurityInterface;
 use BaksDev\Telegram\Builder\ReplyKeyboardMarkup\ReplyKeyboardButton;
@@ -47,6 +48,7 @@ use Symfony\Contracts\Cache\CacheInterface;
 /**
  * Разделы меню, к которым у пользователя есть доступ
  *
+ * prev @see TelegramAuthorityHandler
  * next @see TelegramMenuSectionsHandler
  */
 #[AsMessageHandler()]
@@ -63,6 +65,7 @@ final readonly class TelegramMenuAuthorityHandler
         private ActiveProfileByAccountTelegramInterface $activeProfileByAccountTelegram,
         private TelegramSecurityInterface $telegramSecurity,
         private MenuAdminInterface $MenuAdmin,
+        private ReplyKeyboardMarkup $keyboardMarkup,
     )
     {
         $this->cache = $appCache->init('telegram');
@@ -89,7 +92,9 @@ final readonly class TelegramMenuAuthorityHandler
 
         if(false === ($profile instanceof UserProfileUid))
         {
-            $this->logger->warning(__CLASS__.':'.__LINE__.'Запрос от не авторизированного пользователя');
+            $this->logger->warning(__CLASS__.':'.__LINE__.'Запрос от не авторизированного пользователя', [
+                '$profile' => $profile,
+            ]);
             return;
         }
 
@@ -109,60 +114,67 @@ final readonly class TelegramMenuAuthorityHandler
         $cacheItem->set($authority);
         $this->cache->save($cacheItem);
 
-        /** Строим корневое меню */
-        $authorityMenu = $this->authorityRootMenu($profile, $authority);
-
         /** Готовим сообщение для отправки */
         $this
             ->telegramSendMessage
             ->chanel($telegramRequest->getChatId());
 
+        /** Строим корневое меню */
+        $authorityMenu = $this->authorityRootMenu($profile, $authority);
+
         /** Меню пустое если у пользователя нет доступов */
         if(is_null($authorityMenu))
         {
-            $this->logger->warning(__CLASS__.':'.__LINE__.'У данного профиля нет доступа к разделам меню в этом магазине', ['$profile' => $profile]);
+            $this->logger->warning(__CLASS__.':'.__LINE__.'У данного профиля нет доступа к разделам меню в этом магазине', [
+                '$profile' => $profile
+            ]);
 
+            $this->keyboardMarkup
+                ->addNewRow(
+                    (new ReplyKeyboardButton)
+                        ->setText('Выход')
+                        ->setCallbackData(TelegramDeleteMessageHandler::DELETE_KEY)
+                );
+
+            /** Сообщаем об ошибке */
             $this
                 ->telegramSendMessage
-                ->chanel($telegramRequest->getChatId())
-                ->message('Нет доступа к разделам меню в этом магазине')
+                ->message('<b>Нет доступа к разделам меню в этом магазине</b>')
+                ->markup($this->keyboardMarkup)
+                ->delete([$telegramRequest->getId(), $telegramRequest->getLast()])
                 ->send();
 
             $message->complete();
-
             return;
         }
 
-        $inlineKeyboard = $this->keyboard($authorityMenu);
-
-        if(is_null($inlineKeyboard))
+        /** Если ошибка при построении клавиатуры */
+        if(false === $this->keyboard($authorityMenu))
         {
-            /** Клавиатура */
-            $inlineKeyboard = new ReplyKeyboardMarkup;
-            /** Кнопка назад */
-            $inlineKeyboard->addNewRow(
-                (new ReplyKeyboardButton)
-                    ->setText('Выход')
-                    ->setCallbackData(TelegramDeleteMessageHandler::DELETE_KEY)
-            );
+            $this->keyboardMarkup
+                ->addNewRow(
+                    (new ReplyKeyboardButton)
+                        ->setText('Выход')
+                        ->setCallbackData(TelegramDeleteMessageHandler::DELETE_KEY)
+                );
 
             /** Сообщаем об ошибке */
             $this
                 ->telegramSendMessage
                 ->message('<b>Внутренняя ошибка сервера. Обратитесь к администратору</b>')
-                ->markup($inlineKeyboard)
+                ->markup($this->keyboardMarkup)
+                ->delete([$telegramRequest->getId(), $telegramRequest->getLast()])
                 ->send();
 
             $message->complete();
-
             return;
         }
 
-        /** Отправляем действие с клавиатурой */
+        /** Отправляем действия с клавиатурой */
         $this
             ->telegramSendMessage
             ->message('<b>Выберите раздел</b>')
-            ->markup($inlineKeyboard)
+            ->markup($this->keyboardMarkup)
             ->delete([$telegramRequest->getId(), $telegramRequest->getLast()])
             ->send();
 
@@ -223,10 +235,9 @@ final readonly class TelegramMenuAuthorityHandler
         return $authorityMenu;
     }
 
-    private function keyboard(array $menu): array|null
+    private function keyboard(array $menu): bool
     {
-        $inlineKeyboard = new ReplyKeyboardMarkup;
-        $inlineKeyboard->setMaxRowButtons(1);
+        $this->keyboardMarkup->setMaxRowButtons(1);
 
         /**
          * @var string $menuName - название раздела меню
@@ -239,8 +250,14 @@ final readonly class TelegramMenuAuthorityHandler
 
             if($callbackDataSize > 64)
             {
-                $this->logger->critical(__CLASS__.':'.__LINE__.'Ошибка создания клавиатуры для чата: Превышен максимальный размер callback_data', [$callbackData, $callbackDataSize]);
-                return null;
+                $this->logger->critical(
+                    __CLASS__.':'.__LINE__.
+                    'Ошибка создания клавиатуры для чата: Превышен максимальный размер callback_data',
+                    [
+                        '$callbackData' => $callbackData,
+                        '$callbackDataSize' => $callbackDataSize,
+                    ]);
+                return false;
             }
 
             $button = new ReplyKeyboardButton;
@@ -248,7 +265,7 @@ final readonly class TelegramMenuAuthorityHandler
                 ->setText($menuName)
                 ->setCallbackData($callbackData);
 
-            $inlineKeyboard->addCurrentRow($button);
+            $this->keyboardMarkup->addCurrentRow($button);
         }
 
         /** Кнопка назад */
@@ -257,9 +274,9 @@ final readonly class TelegramMenuAuthorityHandler
             ->setText('Выход')
             ->setCallbackData(TelegramDeleteMessageHandler::DELETE_KEY);
 
-        $inlineKeyboard->addNewRow($backButton);
+        $this->keyboardMarkup->addNewRow($backButton);
 
-        return $inlineKeyboard->build();
+        return true;
     }
 }
 
