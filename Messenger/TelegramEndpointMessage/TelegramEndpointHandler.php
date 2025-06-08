@@ -47,7 +47,7 @@ final class TelegramEndpointHandler
         if($TelegramRequest instanceof TelegramRequestMessage)
         {
             /** При совпадении с установленными триггерами - пропускаем обработку */
-            if(in_array($TelegramRequest->getText(), TelegramBotCommands::toArray()))
+            if(in_array($TelegramRequest->getText(), TelegramBotCommands::allCommands()))
             {
                 return;
             }
