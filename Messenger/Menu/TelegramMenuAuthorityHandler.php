@@ -92,7 +92,7 @@ final readonly class TelegramMenuAuthorityHandler
 
         if(false === ($profile instanceof UserProfileUid))
         {
-            $this->logger->warning('telegram-bot: Запрос от не авторизированного пользователя', [
+            $this->logger->warning('Запрос от не авторизированного пользователя', [
                 '$profile' => $profile, self::class.':'.__LINE__,
             ]);
             return;
@@ -103,7 +103,7 @@ final readonly class TelegramMenuAuthorityHandler
 
         if(is_null($authority))
         {
-            $this->logger->warning('telegram-bot: Не передан идентификатор профиля $authority', [self::class.':'.__LINE__]);
+            $this->logger->warning('Не передан идентификатор профиля $authority', [self::class.':'.__LINE__]);
 
             return;
         }
@@ -126,7 +126,7 @@ final readonly class TelegramMenuAuthorityHandler
         /** Меню пустое если у пользователя нет доступов */
         if(is_null($authorityMenu))
         {
-            $this->logger->warning('telegram-bot: У данного профиля нет доступа к разделам меню в этом магазине',
+            $this->logger->warning('У данного профиля нет доступа к разделам меню в этом магазине',
                 ['$profile' => $profile, self::class.':'.__LINE__],
             );
 

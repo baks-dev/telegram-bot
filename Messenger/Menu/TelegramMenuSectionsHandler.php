@@ -109,7 +109,7 @@ final class TelegramMenuSectionsHandler
 
         if(false === ($profile instanceof UserProfileUid))
         {
-            $this->logger->warning('telegram-bot: Запрос от не авторизированного пользователя', [self::class.':'.__LINE__]);
+            $this->logger->warning('Запрос от не авторизированного пользователя', [self::class.':'.__LINE__]);
 
             return;
         }
@@ -125,7 +125,7 @@ final class TelegramMenuSectionsHandler
 
         if(is_null($authority))
         {
-            $this->logger->warning('telegram-bot: Не найден идентификатор $authority', [self::class.':'.__LINE__]);
+            $this->logger->warning('Не найден идентификатор $authority', [self::class.':'.__LINE__]);
 
             return;
         }
