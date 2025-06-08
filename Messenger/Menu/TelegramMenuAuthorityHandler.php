@@ -60,12 +60,12 @@ final readonly class TelegramMenuAuthorityHandler
 
     public function __construct(
         #[Target('telegramLogger')] private LoggerInterface $logger,
-        private AppCacheInterface $appCache,
         private TelegramSendMessages $telegramSendMessage,
         private ActiveProfileByAccountTelegramInterface $activeProfileByAccountTelegram,
         private TelegramSecurityInterface $telegramSecurity,
         private MenuAdminInterface $MenuAdmin,
         private ReplyKeyboardMarkup $keyboardMarkup,
+        AppCacheInterface $appCache,
     )
     {
         $this->cache = $appCache->init('telegram');
@@ -92,8 +92,8 @@ final readonly class TelegramMenuAuthorityHandler
 
         if(false === ($profile instanceof UserProfileUid))
         {
-            $this->logger->warning(__CLASS__.':'.__LINE__.'Запрос от не авторизированного пользователя', [
-                '$profile' => $profile,
+            $this->logger->warning('telegram-bot: Запрос от не авторизированного пользователя', [
+                '$profile' => $profile, self::class.':'.__LINE__,
             ]);
             return;
         }
@@ -103,7 +103,8 @@ final readonly class TelegramMenuAuthorityHandler
 
         if(is_null($authority))
         {
-            $this->logger->warning(__CLASS__.':'.__LINE__.'Не передан идентификатор профиля $authority');
+            $this->logger->warning('telegram-bot: Не передан идентификатор профиля $authority', [self::class.':'.__LINE__]);
+
             return;
         }
 
@@ -125,15 +126,15 @@ final readonly class TelegramMenuAuthorityHandler
         /** Меню пустое если у пользователя нет доступов */
         if(is_null($authorityMenu))
         {
-            $this->logger->warning(__CLASS__.':'.__LINE__.'У данного профиля нет доступа к разделам меню в этом магазине', [
-                '$profile' => $profile
-            ]);
+            $this->logger->warning('telegram-bot: У данного профиля нет доступа к разделам меню в этом магазине',
+                ['$profile' => $profile, self::class.':'.__LINE__],
+            );
 
             $this->keyboardMarkup
                 ->addNewRow(
                     (new ReplyKeyboardButton)
                         ->setText('Выход')
-                        ->setCallbackData(TelegramDeleteMessageHandler::DELETE_KEY)
+                        ->setCallbackData(TelegramDeleteMessageHandler::DELETE_KEY),
                 );
 
             /** Сообщаем об ошибке */
@@ -145,6 +146,7 @@ final readonly class TelegramMenuAuthorityHandler
                 ->send();
 
             $message->complete();
+
             return;
         }
 
@@ -155,7 +157,7 @@ final readonly class TelegramMenuAuthorityHandler
                 ->addNewRow(
                     (new ReplyKeyboardButton)
                         ->setText('Выход')
-                        ->setCallbackData(TelegramDeleteMessageHandler::DELETE_KEY)
+                        ->setCallbackData(TelegramDeleteMessageHandler::DELETE_KEY),
                 );
 
             /** Сообщаем об ошибке */
@@ -167,6 +169,7 @@ final readonly class TelegramMenuAuthorityHandler
                 ->send();
 
             $message->complete();
+
             return;
         }
 
@@ -189,6 +192,7 @@ final readonly class TelegramMenuAuthorityHandler
 
         /**
          * Перестроенное меню из разделов, с учетом наличие доступов по ролям
+         *
          * @var array<string, string>|null $authorityMenu
          */
         $authorityMenu = null;
@@ -217,7 +221,7 @@ final readonly class TelegramMenuAuthorityHandler
                 return $this->telegramSecurity->isGranted(
                     $profile,
                     $section->getRole(),
-                    $authority
+                    $authority,
                 );
             });
 
@@ -251,12 +255,13 @@ final readonly class TelegramMenuAuthorityHandler
             if($callbackDataSize > 64)
             {
                 $this->logger->critical(
-                    __CLASS__.':'.__LINE__.
-                    'Ошибка создания клавиатуры для чата: Превышен максимальный размер callback_data',
+                    'telegram-bot: Ошибка создания клавиатуры для чата: Превышен максимальный размер callback_data',
                     [
                         '$callbackData' => $callbackData,
                         '$callbackDataSize' => $callbackDataSize,
+                        self::class.':'.__LINE__,
                     ]);
+
                 return false;
             }
 

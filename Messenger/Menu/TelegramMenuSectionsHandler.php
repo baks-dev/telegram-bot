@@ -62,12 +62,12 @@ final class TelegramMenuSectionsHandler
 
     public function __construct(
         #[Target('telegramLogger')] private readonly LoggerInterface $logger,
-        private readonly AppCacheInterface $appCache,
         private readonly ActiveProfileByAccountTelegramInterface $activeProfileByAccountTelegram,
         private readonly TelegramSecurityInterface $telegramSecurity,
         private readonly MenuAdminBySectionIdInterface $menuAdminBySection,
         private readonly ReplyKeyboardMarkup $keyboardMarkup,
         private readonly TelegramSendMessages $telegramSendMessage,
+        AppCacheInterface $appCache,
     )
     {
         $this->cache = $appCache->init('telegram');
@@ -92,7 +92,11 @@ final class TelegramMenuSectionsHandler
         /** Проверка идентификатора секции меню из callback_data */
         if(empty($telegramRequest->getIdentifier()))
         {
-            $this->logger->warning(__CLASS__.':'.__LINE__.' Ошибка получения идентификатора раздела', ['$telegramRequest->getIdentifier()' => $telegramRequest->getIdentifier()]);
+            $this->logger->warning(
+                'telegram-bot: Ошибка получения идентификатора раздела',
+                ['$telegramRequest->getIdentifier()' => $telegramRequest->getIdentifier(), self::class.':'.__LINE__],
+            );
+
             return;
         }
 
@@ -105,7 +109,8 @@ final class TelegramMenuSectionsHandler
 
         if(false === ($profile instanceof UserProfileUid))
         {
-            $this->logger->warning(__CLASS__.':'.__LINE__.'Запрос от не авторизированного пользователя');
+            $this->logger->warning('telegram-bot: Запрос от не авторизированного пользователя', [self::class.':'.__LINE__]);
+
             return;
         }
 
@@ -113,13 +118,15 @@ final class TelegramMenuSectionsHandler
 
         /**
          * Идентификатор профиля, к которому есть доступ
+         *
          * @var string|null $authority
          */
         $authority = $this->cache->getItem($cacheKey)->get();
 
         if(is_null($authority))
         {
-            $this->logger->warning(__CLASS__.':'.__LINE__.'Не найден идентификатор $authority');
+            $this->logger->warning('telegram-bot: Не найден идентификатор $authority', [self::class.':'.__LINE__]);
+
             return;
         }
 
@@ -134,15 +141,16 @@ final class TelegramMenuSectionsHandler
         /** Меню пустое - если у пользователя нет доступов по ролям */
         if(is_null($authorityMenu))
         {
-            $this->logger->warning(__CLASS__.':'.__LINE__.'У данного профиля нет доступа к разделу меню', [
-                '$profile' => $profile,
-            ]);
+            $this->logger->warning(
+                'telegram-bot: У данного профиля нет доступа к разделу меню',
+                ['$profile' => $profile, self::class.':'.__LINE__],
+            );
 
             $this->keyboardMarkup
                 ->addNewRow(
                     (new ReplyKeyboardButton)
                         ->setText('Выход')
-                        ->setCallbackData(TelegramDeleteMessageHandler::DELETE_KEY)
+                        ->setCallbackData(TelegramDeleteMessageHandler::DELETE_KEY),
                 );
 
             /** Сообщаем об ошибке */
@@ -165,7 +173,7 @@ final class TelegramMenuSectionsHandler
                 ->addNewRow(
                     (new ReplyKeyboardButton)
                         ->setText('Назад')
-                        ->setCallbackData(TelegramDeleteMessageHandler::DELETE_KEY)
+                        ->setCallbackData(TelegramDeleteMessageHandler::DELETE_KEY),
                 );
 
             /** Сообщаем об ошибке */
@@ -218,6 +226,7 @@ final class TelegramMenuSectionsHandler
 
         /**
          * Перестроенное меню из разделов, с учетом наличие доступов по ролям
+         *
          * @var array<int, MenuAdminPathResult>|null $authorityMenu
          */
         $authoritySections = null;
@@ -228,7 +237,7 @@ final class TelegramMenuSectionsHandler
             $isGranted = $this->telegramSecurity->isGranted(
                 $profile,
                 $section->getRole(),
-                $authority
+                $authority,
             );
 
             /** Если есть доступ по роли это не заголовок секции - формируем меню из разделов */
@@ -259,12 +268,13 @@ final class TelegramMenuSectionsHandler
             if($callbackDataSize > 64)
             {
                 $this->logger->critical(
-                    __CLASS__.':'.__LINE__.
-                    'Ошибка создания клавиатуры для чата: Превышен максимальный размер callback_data',
+                    'telegram-bot: Ошибка создания клавиатуры для чата: Превышен максимальный размер callback_data',
                     [
                         '$callbackData' => $callbackData,
                         '$callbackDataSize' => $callbackDataSize,
+                        self::class.':'.__LINE__,
                     ]);
+
                 return false;
             }
 

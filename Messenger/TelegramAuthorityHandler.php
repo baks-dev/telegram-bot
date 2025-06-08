@@ -41,6 +41,7 @@ use Generator;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\Attribute\Target;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
+use Traversable;
 
 /**
  * Выбор профиля (магазина), к которому есть доступ у другого профиля
@@ -82,9 +83,11 @@ final readonly class TelegramAuthorityHandler
 
         if(false === ($profile instanceof UserProfileUid))
         {
-            $this->logger->warning(__CLASS__.':'.__LINE__.'Запрос от не авторизированного пользователя', [
-                '$profile' => $profile,
-            ]);
+            $this->logger->warning(
+                'telegram-bot: Запрос от не авторизированного пользователя',
+                ['$profile' => $profile, self::class.':'.__LINE__],
+            );
+
             return;
         }
 
@@ -95,9 +98,11 @@ final readonly class TelegramAuthorityHandler
 
         if(false === $userProfileMenu)
         {
-            $this->logger->warning(__CLASS__.':'.__LINE__.'Отсутствуют доверенности', [
-                '$profile' => $profile,
-            ]);
+            $this->logger->warning(
+                'telegram-bot: Отсутствуют доверенности',
+                ['$profile' => $profile, self::class.':'.__LINE__],
+            );
+
             return;
         }
 
@@ -114,7 +119,7 @@ final readonly class TelegramAuthorityHandler
                 ->addNewRow(
                     (new ReplyKeyboardButton)
                         ->setText('Выход')
-                        ->setCallbackData(TelegramDeleteMessageHandler::DELETE_KEY)
+                        ->setCallbackData(TelegramDeleteMessageHandler::DELETE_KEY),
                 );
 
             $this
@@ -125,6 +130,7 @@ final readonly class TelegramAuthorityHandler
                 ->send();
 
             $message->complete();
+
             return;
         }
 
@@ -144,7 +150,7 @@ final readonly class TelegramAuthorityHandler
      *
      * Строит клавиатуру с кнопками
      */
-    private function keyboard(\Traversable $menu): bool
+    private function keyboard(Traversable $menu): bool
     {
         /** @var MenuAuthorityResult $menuSection */
         foreach($menu as $menuSection)
@@ -155,12 +161,13 @@ final readonly class TelegramAuthorityHandler
             if($callbackDataSize > 64)
             {
                 $this->logger->critical(
-                    __CLASS__.':'.__LINE__.
-                    'Ошибка создания клавиатуры для чата: Превышен максимальный размер callback_data',
+                    'telegram-bot: Ошибка создания клавиатуры для чата: Превышен максимальный размер callback_data',
                     [
                         '$callbackData' => $callbackData,
                         '$callbackDataSize' => $callbackDataSize,
+                        self::class.':'.__LINE__,
                     ]);
+
                 return false;
             }
 
@@ -168,7 +175,7 @@ final readonly class TelegramAuthorityHandler
                 ->addNewRow(
                     (new ReplyKeyboardButton)
                         ->setText($menuSection->getAuthorityUsername())
-                        ->setCallbackData($callbackData)
+                        ->setCallbackData($callbackData),
                 );
         }
 
