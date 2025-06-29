@@ -99,7 +99,7 @@ final class NotifierExceptionListener
             $PATH = substr($substring, strlen($this->HOST));
         }
 
-        $msg = sprintf('<b>%s</b>', $Throwable->getMessage());
+        $msg = sprintf('<b>%s:</b> %s', $this->HOST, $Throwable->getMessage());
         $msg .= PHP_EOL;
         $msg .= PHP_EOL;
         $msg .= sprintf('<code>%s:%s</code>', $PATH, $Throwable->getLine());
