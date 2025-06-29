@@ -240,12 +240,12 @@ final class TelegramMenuSectionsHandler
                 $authority,
             );
 
-            /** Если есть доступ по роли это не заголовок секции - формируем меню из разделов */
+            /** Название секции */
+            $this->keyboardMarkup->setDescription($menuSections->getSectionName(), 'Выберите раздел');
+
+            /** Если есть доступ по роли и это не заголовок секции - формируем меню из разделов */
             if($isGranted and $section->isNotSectionHeader())
             {
-                /** Название секции */
-                $this->keyboardMarkup->setDescription($section->getName(), 'Выберите раздел');
-
                 /** Разделы меню */
                 $authoritySections[] = $section;
             }
