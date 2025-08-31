@@ -27,12 +27,11 @@ declare(strict_types=1);
 namespace BaksDev\Telegram\Bot\Repository\SecurityProfileIsGranted\Tests;
 
 use BaksDev\Telegram\Bot\Repository\SecurityProfileIsGranted\TelegramSecurityInterface;
+use PHPUnit\Framework\Attributes\Group;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 use Symfony\Component\DependencyInjection\Attribute\When;
 
-/**
- * @group telegram-bot
- */
+#[Group('telegram-bot')]
 #[When(env: 'test')]
 class TelegramSecurityRepositoryTest extends KernelTestCase
 {
