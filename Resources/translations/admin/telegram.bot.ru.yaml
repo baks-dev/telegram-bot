@@ -11,4 +11,22 @@ admin:
   danger:
     settings: '%s: Ошибка при обновлении настроек подключения Telegram Bot'
 
+  product:
+    send: "Выбрать и отправить сообщение о товаре в Telegram"
 
+message:
+
+  new: "Отправка сообщения в Telegram"
+
+  success: "Сообщение отправлено"
+
+  danger: "Ошибка при отправке сообщения"
+
+  photo:
+    danger: "Ошибка при отправке изображения"
+
+  empty:
+    danger: "В настроках подключения Telegram Bot нет сообщений"
+
+btn:
+  send: "Отправить"

@@ -26,8 +26,10 @@ declare(strict_types=1);
 namespace BaksDev\Telegram\Bot\UseCase\Settings;
 
 
+use BaksDev\Telegram\Bot\UseCase\Settings\Message\TelegramBotSettingsMessageForm;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\CallbackTransformer;
+use Symfony\Component\Form\Extension\Core\Type\CollectionType;
 use Symfony\Component\Form\Extension\Core\Type\IntegerType;
 use Symfony\Component\Form\Extension\Core\Type\SubmitType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
@@ -74,6 +76,19 @@ final class UsersTableTelegramSettingsForm extends AbstractType
             IntegerType::class,
             ['attr' => ['max' => 100, 'min' => 1]]
         );
+
+        /* Коллекция сообщений */
+        $builder->add('message', CollectionType::class, [
+            /** Указать вложенные формы */
+            'entry_type' => TelegramBotSettingsMessageForm::class,
+            'entry_options' => ['label' => false],
+            'by_reference' => false,
+            'allow_delete' => true,
+            'allow_add' => true,
+            'label' => false,
+            'prototype_name' => '__messages__',
+            'required' => true
+        ]);
 
         /* Сохранить */
         $builder->add(

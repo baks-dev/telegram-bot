@@ -1,6 +1,6 @@
 <?php
 /*
- *  Copyright 2023.  Baks.dev <admin@baks.dev>
+ *  Copyright 2025.  Baks.dev <admin@baks.dev>
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a copy
  *  of this software and associated documentation files (the "Software"), to deal
@@ -20,20 +20,32 @@
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  *  THE SOFTWARE.
  */
+declare(strict_types=1);
 
-namespace BaksDev\Telegram\Bot\Repository\UsersTableTelegramSettings;
+namespace BaksDev\Telegram\Bot\UseCase\Settings\Message;
 
-interface TelegramBotSettingsInterface
+
+use Symfony\Component\Form\AbstractType;
+use Symfony\Component\Form\Extension\Core\Type\TextareaType;
+use Symfony\Component\Form\FormBuilderInterface;
+use Symfony\Component\OptionsResolver\OptionsResolver;
+
+final class TelegramBotSettingsMessageForm extends AbstractType
 {
-    public function settings(): self|bool;
+    public function buildForm(FormBuilderInterface $builder, array $options): void
+    {
+        $builder->add(
+            'message',
+            TextareaType::class
+        );
+    }
 
-    public function getToken(): string;
-
-    public function getSecret(): string;
-
-    public function getUrl(): ?string;
-
-    public function equalsSecret(?string $secret): bool;
-
-    public function getMessages(): array|false;
+    public function configureOptions(OptionsResolver $resolver): void
+    {
+        $resolver->setDefaults([
+            'data_class' => TelegramBotSettingsMessageDTO::class,
+            'method' => 'POST',
+            'attr' => ['class' => 'w-100'],
+        ]);
+    }
 }

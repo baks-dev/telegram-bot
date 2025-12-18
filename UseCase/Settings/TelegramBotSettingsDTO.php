@@ -27,6 +27,8 @@ namespace BaksDev\Telegram\Bot\UseCase\Settings;
 
 use BaksDev\Telegram\Bot\Entity\Event\TelegramBotSettingsEventInterface;
 use BaksDev\Telegram\Bot\Type\Settings\Event\TelegramBotSettingsEventUid;
+use BaksDev\Telegram\Bot\UseCase\Settings\Message\TelegramBotSettingsMessageDTO;
+use Doctrine\Common\Collections\ArrayCollection;
 use Symfony\Component\Validator\Constraints as Assert;
 
 /** @see TelegramBotSettingsEvent */
@@ -63,6 +65,16 @@ final class TelegramBotSettingsDTO implements TelegramBotSettingsEventInterface
     #[Assert\NotBlank]
     #[Assert\Range(min: 1, max: 100)]
     private int $connect = 50;
+
+    /** Коллекция сообщений в настройках */
+    #[Assert\Valid]
+    #[Assert\NotBlank]
+    private ArrayCollection $message;
+
+    public function __construct()
+    {
+        $this->message = new ArrayCollection();
+    }
 
     public function setId(?TelegramBotSettingsEventUid $id): void
     {
@@ -125,6 +137,35 @@ final class TelegramBotSettingsDTO implements TelegramBotSettingsEventInterface
     {
         $this->url = $url;
         return $this;
+    }
+
+
+    /**
+     * Коллекция сообщений в настройках
+     *
+     * @return ArrayCollection<int, TelegramBotSettingsMessageDTO>
+     */
+    public function getMessage(): ArrayCollection
+    {
+        return $this->message;
+    }
+
+    public function setMessage(ArrayCollection $message): void
+    {
+        $this->message = $message;
+    }
+
+    public function addMessage(TelegramBotSettingsMessageDTO $message): void
+    {
+        if(!$this->message->contains($message))
+        {
+            $this->message->add($message);
+        }
+    }
+
+    public function removeMessage(TelegramBotSettingsMessageDTO $message): void
+    {
+        $this->message->removeElement($message);
     }
 
 

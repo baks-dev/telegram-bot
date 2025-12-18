@@ -1,6 +1,6 @@
 <?php
 /*
- *  Copyright 2023.  Baks.dev <admin@baks.dev>
+ *  Copyright 2025.  Baks.dev <admin@baks.dev>
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a copy
  *  of this software and associated documentation files (the "Software"), to deal
@@ -21,19 +21,29 @@
  *  THE SOFTWARE.
  */
 
-namespace BaksDev\Telegram\Bot\Repository\UsersTableTelegramSettings;
+declare(strict_types=1);
 
-interface TelegramBotSettingsInterface
+namespace BaksDev\Telegram\Bot\UseCase\Settings\Message;
+
+use BaksDev\Telegram\Bot\Entity\Message\TelegramBotSettingsMessageInterface;
+use Symfony\Component\Validator\Constraints as Assert;
+
+/** @see TelegramBotSettingsMessageEvent */
+final class TelegramBotSettingsMessageDTO implements TelegramBotSettingsMessageInterface
 {
-    public function settings(): self|bool;
 
-    public function getToken(): string;
+    #[Assert\NotBlank]
+    private ?string $message = null;
 
-    public function getSecret(): string;
+    public function getMessage(): ?string
+    {
+        return $this->message;
+    }
 
-    public function getUrl(): ?string;
+    public function setMessage(?string $message): self
+    {
+        $this->message = $message;
+        return $this;
+    }
 
-    public function equalsSecret(?string $secret): bool;
-
-    public function getMessages(): array|false;
 }
