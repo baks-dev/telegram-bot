@@ -130,12 +130,12 @@ final class SendMessageController extends AbstractController
         {
             /* Получить выбранные значения */
             $messages = $TelegramProductsInfoDTO->getMessages();
-            $messageTelegram = implode(PHP_EOL, $messages);
+            $messageTelegram = trim(implode(PHP_EOL, $messages));
         }
 
 
         /** Если сообщение заполнено */
-        if($messageTelegram !== '')
+        if(false === empty($messageTelegram))
         {
 
             /** Получить и отправить изображение товара */

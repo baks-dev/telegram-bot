@@ -51,14 +51,15 @@ final class TelegramProductsInfoForm extends AbstractType
 
         if(false !== $messages)
         {
-            $message_choices = [];
-            foreach($messages as $message)
-            {
-                $message_choices[$message] = $message;
-            }
 
             $builder->add('messages', ChoiceType::class, [
-                'choices' => $message_choices,
+                'choices' => $messages,
+                'choice_value' => function(string $message) {
+                    return $message;
+                },
+                'choice_label' => function(string $message) {
+                    return $message;
+                },
                 'multiple' => true, /* Разрешить множественный выбор */
                 'expanded' => true, /* Выводить как чекбоксы */
                 'required' => true,
