@@ -28,6 +28,7 @@ namespace BaksDev\Telegram\Bot\Repository\UsersTableTelegramSettings;
 use BaksDev\Core\Doctrine\DBALQueryBuilder;
 use BaksDev\Core\Doctrine\ORMQueryBuilder;
 use BaksDev\Telegram\Bot\Entity\Event\TelegramBotSettingsEvent;
+use BaksDev\Telegram\Bot\Entity\Message\TelegramBotSettingsMessage;
 use BaksDev\Telegram\Bot\Entity\TelegramBotSettings;
 use BaksDev\Telegram\Bot\Type\Settings\Id\UsersTableTelegramSettingsIdentificator;
 
@@ -46,6 +47,10 @@ final class TelegramBotSettingsRepository implements TelegramBotSettingsInterfac
      */
     private bool|string $secret = false;
 
+    /**
+     * Сообщения в настройках.
+     */
+    private array|false $messages = [];
 
     public function __construct(
         private readonly DBALQueryBuilder $DBALQueryBuilder,
@@ -105,6 +110,21 @@ final class TelegramBotSettingsRepository implements TelegramBotSettingsInterfac
             'event.id = settings.event'
         );
 
+        $dbal->leftJoin(
+            'settings',
+            TelegramBotSettingsMessage::class,
+            'message',
+            'message.event = settings.event'
+        );
+
+        $dbal->addSelect("JSON_AGG
+			( DISTINCT
+					message.message
+			) FILTER (WHERE message.message IS NOT NULL) AS messages");
+
+
+        $dbal->allGroupByExclude();
+
         /* Кешируем результат DBAL */
         $settings = $dbal
             ->enableCache('telegram', '5 minutes')
@@ -115,6 +135,9 @@ final class TelegramBotSettingsRepository implements TelegramBotSettingsInterfac
             $this->token = $settings['token'];
             $this->secret = $settings['secret'];
             $this->url = $settings['url'];
+
+            $this->messages = $settings['messages'] ?
+                json_decode($settings['messages'], false, 512, JSON_THROW_ON_ERROR) : false;
 
             return $this;
         }
@@ -158,4 +181,13 @@ final class TelegramBotSettingsRepository implements TelegramBotSettingsInterfac
     {
         return $this->url;
     }
+
+    /**
+     * Messages
+     */
+    public function getMessages(): array|false
+    {
+        return $this->messages;
+    }
+
 }

@@ -1,6 +1,6 @@
 <?php
 /*
- *  Copyright 2023.  Baks.dev <admin@baks.dev>
+ *  Copyright 2025.  Baks.dev <admin@baks.dev>
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a copy
  *  of this software and associated documentation files (the "Software"), to deal
@@ -23,76 +23,61 @@
 
 declare(strict_types=1);
 
-namespace BaksDev\Telegram\Bot\UseCase\Settings;
+namespace BaksDev\Telegram\Bot\UseCase\TelegramProductInfo;
 
 
-use BaksDev\Telegram\Bot\UseCase\Settings\Message\TelegramBotSettingsMessageForm;
+use BaksDev\Telegram\Bot\Repository\UsersTableTelegramSettings\TelegramBotSettingsInterface;
+use BaksDev\Telegram\Bot\UseCase\TelegramProductInfo\TelegramProduct\TelegramProductForm;
 use Symfony\Component\Form\AbstractType;
-use Symfony\Component\Form\CallbackTransformer;
+use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\CollectionType;
-use Symfony\Component\Form\Extension\Core\Type\IntegerType;
 use Symfony\Component\Form\Extension\Core\Type\SubmitType;
-use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
-final class UsersTableTelegramSettingsForm extends AbstractType
+final class TelegramProductsInfoForm extends AbstractType
 {
+
+    public function __construct(
+        private readonly TelegramBotSettingsInterface $UsersTableTelegramSettingsRepository,
+    ) {}
+
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
-        $builder->add('url',
-            TextType::class,
-            ['help' => 'Пример: https://t.me/MyTelegramBot']
-        );
 
-        $builder->add('token', TextType::class);
+        /* Сообщения */
+        $settings = $this->UsersTableTelegramSettingsRepository->settings();
+        $messages = $settings->getMessages();
 
-        $builder->get('token')->addModelTransformer(
-            new CallbackTransformer(
-                function($token) {
-                    return null;
+        if(false !== $messages)
+        {
+
+            $builder->add('messages', ChoiceType::class, [
+                'choices' => $messages,
+                'choice_value' => function(string $message) {
+                    return $message;
                 },
-                function($token) {
-                    return $token ;
-                }
-            )
-        );
-
-        $builder->add('secret', TextType::class);
-
-        $builder->get('secret')->addModelTransformer(
-            new CallbackTransformer(
-                function($secret) {
-                    return null;
+                'choice_label' => function(string $message) {
+                    return $message;
                 },
-                function($secret) {
-                    return $secret ;
-                }
-            )
-        );
+                'multiple' => true, /* Разрешить множественный выбор */
+                'expanded' => true, /* Выводить как чекбоксы */
+                'required' => true,
+            ]);
+        }
 
-        $builder->add(
-            'connect',
-            IntegerType::class,
-            ['attr' => ['max' => 100, 'min' => 1]]
-        );
-
-        /* Коллекция сообщений */
-        $builder->add('message', CollectionType::class, [
+        $builder->add('collection', CollectionType::class, [
             /** Указать вложенные формы */
-            'entry_type' => TelegramBotSettingsMessageForm::class,
-            'entry_options' => ['label' => false],
-            'by_reference' => false,
-            'allow_delete' => true,
+            'entry_type' => TelegramProductForm::class,
+            'entry_options' => [
+                'attr' => ['class' => 'products-data-box'],
+            ],
             'allow_add' => true,
-            'label' => false,
-            'prototype_name' => '__messages__',
-            'required' => true
         ]);
 
-        /* Сохранить */
+        /* Сохранить ******************************************************/
         $builder->add(
-            'telegram_bot_settings',
+            'telegram_product_info',
             SubmitType::class,
             ['label' => 'Save', 'label_html' => true, 'attr' => ['class' => 'btn-primary']]
         );
@@ -101,7 +86,7 @@ final class UsersTableTelegramSettingsForm extends AbstractType
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefaults([
-            'data_class' => TelegramBotSettingsDTO::class,
+            'data_class' => TelegramProductsInfoDTO::class,
             'method' => 'POST',
             'attr' => ['class' => 'w-100'],
         ]);

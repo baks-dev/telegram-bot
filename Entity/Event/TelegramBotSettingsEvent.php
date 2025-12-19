@@ -26,10 +26,12 @@ declare(strict_types=1);
 namespace BaksDev\Telegram\Bot\Entity\Event;
 
 use BaksDev\Core\Entity\EntityEvent;
+use BaksDev\Telegram\Bot\Entity\Message\TelegramBotSettingsMessage;
 use BaksDev\Telegram\Bot\Entity\Modify\TelegramBotSettingsModify;
 use BaksDev\Telegram\Bot\Entity\TelegramBotSettings;
 use BaksDev\Telegram\Bot\Type\Settings\Event\TelegramBotSettingsEventUid;
 use BaksDev\Telegram\Bot\Type\Settings\Id\UsersTableTelegramSettingsIdentificator;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use InvalidArgumentException;
@@ -94,6 +96,13 @@ class TelegramBotSettingsEvent extends EntityEvent
     #[Assert\Range(min: 1, max: 100)]
     #[ORM\Column(type: Types::SMALLINT)]
     private int $connect = 50;
+
+
+    /**
+     * Коллекция сообщений
+     */
+    #[ORM\OneToMany(targetEntity: TelegramBotSettingsMessage::class, mappedBy: 'event', cascade: ['all'])]
+    protected Collection $message;
 
     public function __construct()
     {

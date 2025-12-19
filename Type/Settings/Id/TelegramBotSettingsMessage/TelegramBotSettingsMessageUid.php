@@ -1,6 +1,6 @@
 <?php
 /*
- *  Copyright 2023.  Baks.dev <admin@baks.dev>
+ *  Copyright 2025.  Baks.dev <admin@baks.dev>
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a copy
  *  of this software and associated documentation files (the "Software"), to deal
@@ -21,19 +21,17 @@
  *  THE SOFTWARE.
  */
 
-namespace BaksDev\Telegram\Bot\Repository\UsersTableTelegramSettings;
+declare(strict_types=1);
 
-interface TelegramBotSettingsInterface
+namespace BaksDev\Telegram\Bot\Type\Settings\Id\TelegramBotSettingsMessage;
+
+use BaksDev\Core\Type\UidType\Uid;
+
+final class TelegramBotSettingsMessageUid extends Uid
 {
-    public function settings(): self|bool;
+    /** Тестовый идентификатор */
+    public const string TEST = '019b2770-a8dd-7967-98f6-8c6c4f43bfee';
 
-    public function getToken(): string;
+    public const string TYPE = 'telegram_bot_settings_message';
 
-    public function getSecret(): string;
-
-    public function getUrl(): ?string;
-
-    public function equalsSecret(?string $secret): bool;
-
-    public function getMessages(): array|false;
 }
