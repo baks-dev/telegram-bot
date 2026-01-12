@@ -116,7 +116,7 @@ final class SendMessageController extends AbstractController
                 'telegram.bot',
             );
 
-            return $this->redirectToRoute('manufacture-part:admin.index');
+            return $this->redirectToRoute('manufacture-part-application:admin.index');
         }
 
         /** Если в настройках задано одно сообщение */
@@ -192,7 +192,7 @@ final class SendMessageController extends AbstractController
                 'telegram.bot',
             );
 
-            return $this->redirectToRoute('manufacture-part:admin.index');
+            return $this->redirectToRoute('manufacture-part-application:admin.index');
 
         }
 
