@@ -1,6 +1,6 @@
 <?php
 /*
- *  Copyright 2023.  Baks.dev <admin@baks.dev>
+ *  Copyright 2026.  Baks.dev <admin@baks.dev>
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a copy
  *  of this software and associated documentation files (the "Software"), to deal
@@ -21,57 +21,42 @@
  *  THE SOFTWARE.
  */
 
-namespace BaksDev\Telegram\Bot\Entity;
 
-use BaksDev\Core\Entity\EntityState;
-use BaksDev\Telegram\Bot\Entity\Event\TelegramBotSettingsEvent;
+namespace BaksDev\Telegram\Bot\UseCase\Settings\Delete;
+
+use BaksDev\Telegram\Bot\Entity\Event\TelegramBotSettingsEventInterface;
 use BaksDev\Telegram\Bot\Type\Settings\Event\TelegramBotSettingsEventUid;
-use BaksDev\Telegram\Bot\Type\Settings\Id\TelegramBotSettingsUid;
-use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 
-
-/**
- * Настройки Telegram бота
- */
-#[ORM\Entity]
-#[ORM\Table(name: 'telegram_bot_settings')]
-class TelegramBotSettings extends EntityState
+final class TelegramBotSettingsDeleteDTO implements TelegramBotSettingsEventInterface
 {
-
-    /** ID */
-    #[Assert\NotBlank]
+    /**
+     * Идентификатор события.
+     */
     #[Assert\Uuid]
-    #[ORM\Id]
-    #[ORM\Column(type: TelegramBotSettingsUid::TYPE)]
-    private TelegramBotSettingsUid $id;
+    #[Assert\NotBlank]
+    private readonly TelegramBotSettingsEventUid $id;
 
-    /** ID События */
-    #[ORM\Column(name: 'event', type: TelegramBotSettingsEventUid::TYPE, unique: true, nullable: false)]
-    private TelegramBotSettingsEventUid $event;
+    #[Assert\Valid]
+    private Modify\ModifyDTO $modify;
 
     public function __construct()
     {
-        $this->id = new TelegramBotSettingsUid();
+        $this->modify = new Modify\ModifyDTO();
     }
 
-    public function __toString(): string
-    {
-        return (string) $this->id;
-    }
-
-    public function getId(): TelegramBotSettingsUid
+    public function getEvent(): ?TelegramBotSettingsEventUid
     {
         return $this->id;
     }
 
-    public function setEvent(TelegramBotSettingsEvent|TelegramBotSettingsEventUid $event): void
+    public function setId(TelegramBotSettingsEventUid $id): void
     {
-        $this->event = $event instanceof TelegramBotSettingsEvent ? $event->getId() : $event;
+        $this->id = $id;
     }
 
-    public function getEvent(): TelegramBotSettingsEventUid
+    public function getModify(): Modify\ModifyDTO
     {
-        return $this->event;
+        return $this->modify;
     }
 }

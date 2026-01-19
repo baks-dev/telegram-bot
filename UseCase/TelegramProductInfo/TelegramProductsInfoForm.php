@@ -26,7 +26,7 @@ declare(strict_types=1);
 namespace BaksDev\Telegram\Bot\UseCase\TelegramProductInfo;
 
 
-use BaksDev\Telegram\Bot\Repository\UsersTableTelegramSettings\TelegramBotSettingsInterface;
+use BaksDev\Telegram\Bot\Repository\TelegramBotSettings\TelegramBotSettingsInterface;
 use BaksDev\Telegram\Bot\UseCase\TelegramProductInfo\TelegramProduct\TelegramProductForm;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
@@ -39,31 +39,35 @@ final class TelegramProductsInfoForm extends AbstractType
 {
 
     public function __construct(
-        private readonly TelegramBotSettingsInterface $UsersTableTelegramSettingsRepository,
+        private readonly TelegramBotSettingsInterface $TelegramSettingsRepository,
     ) {}
 
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
 
         /* Сообщения */
-        $settings = $this->UsersTableTelegramSettingsRepository->settings();
-        $messages = $settings->getMessages();
+        $settings = $this->TelegramSettingsRepository->settings();
 
-        if(false !== $messages)
+        if ($settings)
         {
+            $messages = $settings->getMessages();
 
-            $builder->add('messages', ChoiceType::class, [
-                'choices' => $messages,
-                'choice_value' => function(string $message) {
-                    return $message;
-                },
-                'choice_label' => function(string $message) {
-                    return $message;
-                },
-                'multiple' => true, /* Разрешить множественный выбор */
-                'expanded' => true, /* Выводить как чекбоксы */
-                'required' => true,
-            ]);
+            if(false !== $messages)
+            {
+
+                $builder->add('messages', ChoiceType::class, [
+                    'choices' => $messages,
+                    'choice_value' => function(string $message) {
+                        return $message;
+                    },
+                    'choice_label' => function(string $message) {
+                        return $message;
+                    },
+                    'multiple' => true, /* Разрешить множественный выбор */
+                    'expanded' => true, /* Выводить как чекбоксы */
+                    'required' => true,
+                ]);
+            }
         }
 
         $builder->add('collection', CollectionType::class, [

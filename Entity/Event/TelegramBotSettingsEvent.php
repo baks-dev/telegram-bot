@@ -26,11 +26,14 @@ declare(strict_types=1);
 namespace BaksDev\Telegram\Bot\Entity\Event;
 
 use BaksDev\Core\Entity\EntityEvent;
+use BaksDev\Telegram\Bot\Entity\Active\TelegramBotSettingsActive;
 use BaksDev\Telegram\Bot\Entity\Message\TelegramBotSettingsMessage;
 use BaksDev\Telegram\Bot\Entity\Modify\TelegramBotSettingsModify;
+use BaksDev\Telegram\Bot\Entity\Profile\TelegramBotSettingsProfile;
 use BaksDev\Telegram\Bot\Entity\TelegramBotSettings;
 use BaksDev\Telegram\Bot\Type\Settings\Event\TelegramBotSettingsEventUid;
-use BaksDev\Telegram\Bot\Type\Settings\Id\UsersTableTelegramSettingsIdentificator;
+use BaksDev\Telegram\Bot\Type\Settings\Id\TelegramBotSettingsUid;
+use BaksDev\Users\Profile\UserProfile\Type\Id\UserProfileUid;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
@@ -38,7 +41,7 @@ use InvalidArgumentException;
 use Symfony\Component\Validator\Constraints as Assert;
 
 
-/* UsersTableSettingsEvent */
+/* TelegramBotSettingsEvent */
 
 #[ORM\Entity]
 #[ORM\Table(name: 'telegram_bot_settings_event')]
@@ -53,12 +56,14 @@ class TelegramBotSettingsEvent extends EntityEvent
     #[ORM\Column(type: TelegramBotSettingsEventUid::TYPE)]
     private TelegramBotSettingsEventUid $id;
 
+
     /**
-     * Идентификатор настройки
+     * Идентификатор Main
      */
     #[Assert\NotBlank]
-    #[ORM\Column(type: UsersTableTelegramSettingsIdentificator::TYPE)]
-    private ?UsersTableTelegramSettingsIdentificator $main = null;
+    #[Assert\Uuid]
+    #[ORM\Column(type: TelegramBotSettingsUid::TYPE, nullable: true)]
+    private ?TelegramBotSettingsUid $main = null;
 
 
     /**
@@ -66,6 +71,16 @@ class TelegramBotSettingsEvent extends EntityEvent
      */
     #[ORM\OneToOne(targetEntity: TelegramBotSettingsModify::class, mappedBy: 'event', cascade: ['all'], fetch: 'EAGER')]
     private TelegramBotSettingsModify $modify;
+
+    /**
+     * Profile
+     */
+    #[ORM\OneToOne(targetEntity: TelegramBotSettingsProfile::class, mappedBy: 'event', cascade: ['all'], fetch: 'EAGER')]
+    private TelegramBotSettingsProfile $profile;
+
+    /** TelegramBotSettingsActive */
+    #[ORM\OneToOne(targetEntity: TelegramBotSettingsActive::class, mappedBy: 'event', cascade: ['all'])]
+    private ?TelegramBotSettingsActive $active = null;
 
 
     /**
@@ -108,12 +123,11 @@ class TelegramBotSettingsEvent extends EntityEvent
     {
         $this->id = new TelegramBotSettingsEventUid();
         $this->modify = new TelegramBotSettingsModify($this);
-
     }
 
     public function __clone()
     {
-        $this->id = clone $this->id;
+        $this->id = clone new TelegramBotSettingsEventUid();
     }
 
     public function __toString(): string
@@ -126,22 +140,21 @@ class TelegramBotSettingsEvent extends EntityEvent
         return $this->id;
     }
 
-    public function setMain(UsersTableTelegramSettingsIdentificator|TelegramBotSettings $main): void
-    {
-        $this->main = $main instanceof TelegramBotSettings ? $main->getId() : $main;
-    }
 
-
-    public function getMain(): ?UsersTableTelegramSettingsIdentificator
+    public function getMain(): TelegramBotSettingsUid
     {
         return $this->main;
     }
 
+    public function setMain(TelegramBotSettings|TelegramBotSettingsUid $main): void
+    {
+        $this->main = $main instanceof TelegramBotSettings ? $main->getId() : $main;
+    }
+
     public function getDto($dto): mixed
     {
-        $dto = is_string($dto) && class_exists($dto) ? new $dto() : $dto;
 
-        if($dto instanceof TelegramBotSettingsEventInterface || $dto instanceof self)
+        if($dto instanceof TelegramBotSettingsEventInterface)
         {
             return parent::getDto($dto);
         }
@@ -151,11 +164,17 @@ class TelegramBotSettingsEvent extends EntityEvent
 
     public function setEntity($dto): mixed
     {
-        if($dto instanceof TelegramBotSettingsEventInterface || $dto instanceof self)
+
+        if($dto instanceof TelegramBotSettingsEventInterface)
         {
             return parent::setEntity($dto);
         }
 
         throw new InvalidArgumentException(sprintf('Class %s interface error', $dto::class));
+    }
+
+    public function getProfile(): UserProfileUid
+    {
+        return $this->profile->getValue();
     }
 }

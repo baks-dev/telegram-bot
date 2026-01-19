@@ -2,6 +2,6 @@
 # Роль
 ROLE_TELEGRAM_SETTINGS:
   header: 'Telegram'
-  name: 'Telegram-bot'
-  desc: 'Настрйоки подключения Telegram Bot'
+  name: 'Telegram-bot настройки'
+  desc: 'Настройки подключения Telegram Bot'
 

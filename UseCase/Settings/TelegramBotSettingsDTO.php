@@ -27,7 +27,9 @@ namespace BaksDev\Telegram\Bot\UseCase\Settings;
 
 use BaksDev\Telegram\Bot\Entity\Event\TelegramBotSettingsEventInterface;
 use BaksDev\Telegram\Bot\Type\Settings\Event\TelegramBotSettingsEventUid;
+use BaksDev\Telegram\Bot\UseCase\Settings\Active\TelegramBotSettingsActiveDTO;
 use BaksDev\Telegram\Bot\UseCase\Settings\Message\TelegramBotSettingsMessageDTO;
+use BaksDev\Telegram\Bot\UseCase\Settings\Profile\TelegramBotSettingsProfileDTO;
 use Doctrine\Common\Collections\ArrayCollection;
 use Symfony\Component\Validator\Constraints as Assert;
 
@@ -71,9 +73,22 @@ final class TelegramBotSettingsDTO implements TelegramBotSettingsEventInterface
     #[Assert\NotBlank]
     private ArrayCollection $message;
 
+    /** Профиль пользователя/магазина  */
+    #[Assert\Valid]
+    #[Assert\NotBlank]
+    private ?TelegramBotSettingsProfileDTO $profile = null;
+
+    /* Active */
+    #[Assert\Valid]
+    private TelegramBotSettingsActiveDTO $active;
+
     public function __construct()
     {
         $this->message = new ArrayCollection();
+        $this->profile = new TelegramBotSettingsProfileDTO();
+
+        $this->active = new TelegramBotSettingsActiveDTO();
+
     }
 
     public function setId(?TelegramBotSettingsEventUid $id): void
@@ -168,5 +183,27 @@ final class TelegramBotSettingsDTO implements TelegramBotSettingsEventInterface
         $this->message->removeElement($message);
     }
 
+
+    public function getProfile(): ?TelegramBotSettingsProfileDTO
+    {
+        return $this->profile;
+    }
+
+    public function setProfile(TelegramBotSettingsProfileDTO $profile): self
+    {
+        $this->profile = $profile;
+        return $this;
+    }
+
+    public function getActive(): TelegramBotSettingsActiveDTO
+    {
+        return $this->active;
+    }
+
+    public function setActive(TelegramBotSettingsActiveDTO $active): self
+    {
+        $this->active = $active;
+        return $this;
+    }
 
 }
