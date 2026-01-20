@@ -52,6 +52,18 @@ final class EditController extends AbstractController
     ): Response
     {
         $TelegramBotSettingsDTO = new TelegramBotSettingsDTO();
+
+        /* Проверить - если admin или владелец профиля */
+        $hasAccess = $this->isAdmin() === true ||
+            $this->getProfileUid()?->equals($event->getProfile()) === true;
+
+        /* Если не admin или владелец профиля то выдать 403 Forbidden */
+        if(false === $hasAccess)
+        {
+            return new Response('', Response::HTTP_FORBIDDEN);
+        }
+
+
         $event->getDto($TelegramBotSettingsDTO);
 
 

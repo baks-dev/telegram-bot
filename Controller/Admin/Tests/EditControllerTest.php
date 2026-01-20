@@ -39,7 +39,7 @@ final class EditControllerTest extends WebTestCase
     private const string ROLE = 'ROLE_TELEGRAM_SETTINGS_EDIT';
 
 
-    /** Доступ по роли ROLE_TELEGRAM_SETTINGS */
+    /** Доступ только по роли ROLE_TELEGRAM_SETTINGS */
     #[DependsOnClass(TelegramBotSettingsHandlerTest::class)]
     public function testRoleSuccessful(): void
     {
@@ -51,7 +51,8 @@ final class EditControllerTest extends WebTestCase
         $client->loginUser($usr, 'user');
         $client->request('GET', sprintf(self::URL, TelegramBotSettingsEventUid::TEST));
 
-        self::assertResponseIsSuccessful();
+        self::assertResponseStatusCodeSame(403);
+//        self::assertResponseIsSuccessful();
     }
 
     /** Доступ по роли ROLE_ADMIN */

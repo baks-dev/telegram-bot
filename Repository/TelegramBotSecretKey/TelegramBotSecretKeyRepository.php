@@ -27,6 +27,7 @@ use BaksDev\Core\Doctrine\DBALQueryBuilder;
 use BaksDev\Telegram\Bot\Entity\Active\TelegramBotSettingsActive;
 use BaksDev\Telegram\Bot\Entity\Event\TelegramBotSettingsEvent;
 use BaksDev\Telegram\Bot\Entity\Profile\TelegramBotSettingsProfile;
+use BaksDev\Telegram\Bot\Entity\TelegramBotSettings;
 use BaksDev\Telegram\Bot\Type\Settings\Event\TelegramBotSettingsEventUid;
 
 
@@ -36,7 +37,7 @@ final class TelegramBotSecretKeyRepository implements TelegramBotSecretKeyInterf
         private readonly DBALQueryBuilder $DBALQueryBuilder,
     ) {}
 
-    public function findKey(TelegramBotSettingsEventUid $eventUid): string|false
+    public function findKey(TelegramBotSettingsEventUid $event): string|false
     {
 
         $dbal = $this->DBALQueryBuilder
@@ -44,21 +45,29 @@ final class TelegramBotSecretKeyRepository implements TelegramBotSecretKeyInterf
             ->bindLocal();
 
         $dbal
-            ->addSelect('event.secret')
-            ->from(TelegramBotSettingsEvent::class, 'event');
+            ->addSelect('event.secret as secret')
+            ->from(TelegramBotSettings::class, 'settings')
+            ->andWhere('settings.event = :event')
+            ->setParameter(
+                'event',
+                $event,
+                TelegramBotSettingsEventUid::TYPE
+            );
+
+        $dbal->leftJoin(
+            'settings',
+            TelegramBotSettingsEvent::class,
+            'event',
+            'settings.event = event.id'
+        );
 
         /* Profile */
         $dbal->join(
             'event',
             TelegramBotSettingsProfile::class,
             'profile',
-            'profile.event = event.id AND event.id = :eventId'
-        )
-            ->setParameter(
-                'eventId',
-                $eventUid,
-                TelegramBotSettingsEventUid::TYPE
-            );
+            'profile.event = event.id'
+        );
 
         /* Настройка должна быть активна */
         $dbal->join(

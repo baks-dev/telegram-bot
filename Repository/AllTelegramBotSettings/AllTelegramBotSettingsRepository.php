@@ -36,6 +36,7 @@ use BaksDev\Users\Profile\UserProfile\Entity\Event\Avatar\UserProfileAvatar;
 use BaksDev\Users\Profile\UserProfile\Entity\Event\Personal\UserProfilePersonal;
 use BaksDev\Users\Profile\UserProfile\Entity\Event\UserProfileEvent;
 use BaksDev\Users\Profile\UserProfile\Entity\UserProfile;
+use BaksDev\Users\Profile\UserProfile\Repository\UserProfileTokenStorage\UserProfileTokenStorageInterface;
 use BaksDev\Users\Profile\UserProfile\Type\Id\UserProfileUid;
 
 
@@ -48,6 +49,8 @@ final class AllTelegramBotSettingsRepository implements AllTelegramBotSettingsIn
     public function __construct(
         private readonly DBALQueryBuilder $DBALQueryBuilder,
         private readonly PaginatorInterface $paginator,
+        private readonly UserProfileTokenStorageInterface $UserProfileTokenStorage,
+
     ) {}
 
 
@@ -62,6 +65,7 @@ final class AllTelegramBotSettingsRepository implements AllTelegramBotSettingsIn
      */
     public function profile(UserProfile|UserProfileUid|string $profile): self
     {
+
         if(is_string($profile))
         {
             $profile = new UserProfileUid($profile);
@@ -92,17 +96,21 @@ final class AllTelegramBotSettingsRepository implements AllTelegramBotSettingsIn
             ->from(TelegramBotSettings::class, 'settings');
 
 
-        $dbal->leftJoin(
-            'settings',
-            TelegramBotSettingsProfile::class,
-            'profile',
-            'profile.event = settings.event '.($this->profile instanceof UserProfileUid ? ' AND profile.value = :profile' : ''),
-        );
+        $dbal
+            ->join(
+                'settings',
+                TelegramBotSettingsProfile::class,
+                'profile',
+                'profile.event = settings.event
+                      AND
+                      profile.value = :profile',
+            )
+            ->setParameter(
+                key: 'profile',
+                value: ($this->profile instanceof UserProfileUid) ? $this->profile : $this->UserProfileTokenStorage->getProfile(),
+                type: UserProfileUid::TYPE,
+            );
 
-        if($this->profile)
-        {
-            $dbal->setParameter('profile', $this->profile, UserProfileUid::TYPE);
-        }
 
         $dbal
             ->addSelect('event.url')
