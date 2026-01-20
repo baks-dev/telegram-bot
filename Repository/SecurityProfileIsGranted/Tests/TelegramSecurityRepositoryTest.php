@@ -36,6 +36,7 @@ use Symfony\Component\DependencyInjection\Attribute\When;
 class TelegramSecurityRepositoryTest extends KernelTestCase
 {
 
+    /** @TODO: */
     public function testFindAll(): void
     {
         /** @var TelegramSecurityInterface $TelegramSecurityInterface */
@@ -54,8 +55,5 @@ class TelegramSecurityRepositoryTest extends KernelTestCase
                 authority: $authority,
                 voter: $role
             );
-
-        dd($result);
     }
-
 }
