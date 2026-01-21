@@ -31,7 +31,7 @@ interface TelegramBotSettingsInterface
 
     public function getToken(): string;
 
-    public function getSecret(): string;
+    public function getSecret(): string|false;
 
     public function getUrl(): ?string;
 

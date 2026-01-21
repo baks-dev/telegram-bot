@@ -151,7 +151,7 @@ final class TelegramBotSettingsRepository implements TelegramBotSettingsInterfac
     /**
      * Secret.
      */
-    public function getSecret(): string
+    public function getSecret(): string|false
     {
         return $this->secret;
     }
