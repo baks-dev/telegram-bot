@@ -1,6 +1,6 @@
 <?php
 /*
- *  Copyright 2025.  Baks.dev <admin@baks.dev>
+ *  Copyright 2026.  Baks.dev <admin@baks.dev>
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a copy
  *  of this software and associated documentation files (the "Software"), to deal
@@ -23,66 +23,56 @@
 
 declare(strict_types=1);
 
-namespace BaksDev\Telegram\Bot\Entity\Message;
+namespace BaksDev\Telegram\Bot\Entity\Active;
+
 
 use BaksDev\Core\Entity\EntityEvent;
 use BaksDev\Telegram\Bot\Entity\Event\TelegramBotSettingsEvent;
-use BaksDev\Telegram\Bot\Type\Settings\Id\TelegramBotSettingsMessage\TelegramBotSettingsMessageUid;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use InvalidArgumentException;
 use Symfony\Component\Validator\Constraints as Assert;
 
 
-/* TelegramBotSettingsMessage */
+/* TelegramBotSettingsActive */
 
 #[ORM\Entity]
-#[ORM\Table(name: 'telegram_bot_settings_message')]
-class TelegramBotSettingsMessage extends EntityEvent
+#[ORM\Table(name: 'telegram_bot_settings_active')]
+class TelegramBotSettingsActive extends EntityEvent
 {
-
-    /** ID  */
+    /** Связь на событие */
+    #[Assert\NotBlank]
     #[ORM\Id]
-    #[ORM\Column(type: TelegramBotSettingsMessageUid::TYPE)]
-    private TelegramBotSettingsMessageUid $id;
-
-
-    /**
-     * Идентификатор События
-     */
-    #[ORM\ManyToOne(targetEntity: TelegramBotSettingsEvent::class, inversedBy: 'message')]
+    #[ORM\OneToOne(targetEntity: TelegramBotSettingsEvent::class, inversedBy: 'active')]
     #[ORM\JoinColumn(name: 'event', referencedColumnName: 'id')]
     private TelegramBotSettingsEvent $event;
 
-    /*
-     * Текст сообщения
-     */
-    #[Assert\NotBlank(message: 'Сообщение обязательно для заполнения')]
-    #[ORM\Column(type: Types::TEXT)]
-    private ?string $message = null;
+    /** Значение свойства */
+    #[ORM\Column(type: Types::BOOLEAN)]
+    private bool $value = false;
 
 
     public function __construct(TelegramBotSettingsEvent $event)
     {
-        $this->id = new TelegramBotSettingsMessageUid();
         $this->event = $event;
     }
 
-
-    public function __clone()
+    public function __toString(): string
     {
-        $this->id = clone $this->id;
+        return (string) $this->event;
     }
 
-    public function getId(): TelegramBotSettingsMessageUid
+    public function getValue(): bool
     {
-        return $this->id;
+        return $this->value === true;
     }
 
-
+    /** @return TelegramBotSettingsActiveInterface */
     public function getDto($dto): mixed
     {
-        if($dto instanceof TelegramBotSettingsMessageInterface)
+        $dto = is_string($dto) && class_exists($dto) ? new $dto() : $dto;
+
+        if($dto instanceof TelegramBotSettingsActiveInterface)
         {
             return parent::getDto($dto);
         }
@@ -90,14 +80,14 @@ class TelegramBotSettingsMessage extends EntityEvent
         throw new InvalidArgumentException(sprintf('Class %s interface error', $dto::class));
     }
 
+    /** @var TelegramBotSettingsActiveInterface $dto */
     public function setEntity($dto): mixed
     {
-        if($dto instanceof TelegramBotSettingsMessageInterface)
+        if($dto instanceof TelegramBotSettingsActiveInterface)
         {
             return parent::setEntity($dto);
         }
 
         throw new InvalidArgumentException(sprintf('Class %s interface error', $dto::class));
     }
-
 }

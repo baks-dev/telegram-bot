@@ -40,7 +40,7 @@ use Doctrine\ORM\Mapping as ORM;
 use InvalidArgumentException;
 use Symfony\Component\Validator\Constraints as Assert;
 
-/* Модификаторы событий UsersTableSettingsModify */
+/* Модификаторы событий TelegramBotSettingsModify */
 
 #[ORM\Entity]
 #[ORM\Table(name: 'telegram_bot_settings_modify')]
@@ -104,7 +104,7 @@ class TelegramBotSettingsModify extends EntityEvent
     {
         $dto = is_string($dto) && class_exists($dto) ? new $dto() : $dto;
 
-        if ($dto instanceof TelegramBotSettingsModifyInterface || $dto instanceof self)
+        if($dto instanceof TelegramBotSettingsModifyInterface || $dto instanceof self)
         {
             return parent::getDto($dto);
         }
@@ -114,7 +114,7 @@ class TelegramBotSettingsModify extends EntityEvent
 
     public function setEntity($dto): mixed
     {
-        if ($dto instanceof TelegramBotSettingsModifyInterface || $dto instanceof self)
+        if($dto instanceof TelegramBotSettingsModifyInterface || $dto instanceof self)
         {
             return parent::setEntity($dto);
         }

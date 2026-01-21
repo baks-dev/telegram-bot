@@ -51,7 +51,7 @@ final class Role implements RoleInterface, MenuAdminInterface
     /** Метод возвращает PATH раздела */
     public function getPath(): string
     {
-        return 'telegram-bot:admin.settings';
+        return 'telegram-bot:admin.index';
     }
 
     /**
@@ -86,6 +86,6 @@ final class Role implements RoleInterface, MenuAdminInterface
      */
     public function getModal(): bool
     {
-        return true;
+        return false;
     }
 }

@@ -1,0 +1,60 @@
+{% trans_default_domain("telegram.bot") %}
+
+{# @var item \BaksDev\Telegram\Bot\Repository\AllTelegramBotSettings\AllTelegramBotSettingsPaginatorResult #}
+
+<tr class="vertical-middle">
+
+    <td class="text-nowrap">
+        {# Пользовательское меню #}
+        {{ include(_self|replace({ "card.html.twig": "_usecase.html.twig" })) }}
+    </td>
+
+    <td class="text-center w-100">
+
+        <div class="d-flex w-50 gap-3 align-items-center">
+
+            {# Avatar #}
+            <div>
+                <span
+                        class="icon rounded-circle bg-cover lazy p-1"
+                        data-bg="{{ cdn_image_path(item.usersProfileAvatar, item.usersProfileAvatarExt, item.usersProfileAvatarCdn) }}"
+                > </span>
+            </div>
+
+            <div class="ms-0 text-start">
+
+                <a href="{{ path('telegram-bot:admin.newedit.edit', {event: item.event }) }}"
+                   class="fw-bolder text-decoration-none text-dark modal-link disabled"
+                   data-bs-toggle="modal"
+                   data-bs-target="#modal"
+                >
+                    {{ item.usersProfileUsername }}
+                </a>
+
+                <div class="text-muted fs-7 fw-bolder d-flex gap-3"></div>
+
+            </div>
+        </div>
+    </td>
+
+    <td class="text-center">
+        {% if item.active %}
+            <div class="badge bg-success">
+                Активный
+            </div>
+        {% else %}
+            <div class="badge bg-danger">
+                Заблокирован
+            </div>
+        {% endif %}
+    </td>
+
+    <td class="text-center">
+        {{ item.url }}
+    </td>
+
+    <td class="text-center">
+        {{ item.connect }}
+    </td>
+
+</tr>

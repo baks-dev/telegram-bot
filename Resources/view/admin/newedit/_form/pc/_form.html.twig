@@ -1,0 +1,99 @@
+{{ form_row(form.url, {label: 'Ссылка на Telegram Bot'}) }}
+
+{{ form_row(form.token, {label: 'Токен авторизации'}) }}
+
+{{ form_row(form.secret, {
+    label: 'Ключ проверки подлиности запроса',
+    help: 'Допускаются только символы A-Z, a-z, 0-9, _ и -'
+}) }}
+
+<div class="alert alert-danger d-flex align-items-center" role="alert">
+    <div>
+        Токен авторизации и Ключ проверки подлиности запроса не отображается при редактировании
+    </div>
+</div>
+
+{{ form_row(form.connect,{
+    label: 'Количество одновременных подключений',
+    help: 'По умолчанию 50. Используйте более низкие значения, чтобы ограничить нагрузку на сервер, и более высокие значения, чтобы увеличить пропускную способность.'
+}) }}
+
+
+{# Если администратор ресурса #}
+{% if is_granted('ROLE_ADMIN') and form.profile.value is defined %}
+    <div class="w-100">
+        {{ form_row(form.profile.value, { label: 'Профиль пользователя', placeholder: 'Выберите профиль из списка...' }) }}
+    </div>
+{% endif %}
+
+{# Active #}
+{# <div class="flex-fill d-flex justify-content-around  radio-buttons gap-3" data-buttons="true"> #}
+<div class="w-100" data-buttons="true">
+
+    <label class="btn btn-sm border-dotted rounded-3 w-100 {{ form.active.value.vars.data ? 'active' }}">
+        <div class="d-flex align-items-center">
+            <div class="flex-grow-1">
+                    <span class="h6">
+                        <div class="form-check d-flex align-items-center">
+                            {{ form_widget(form.active.value, { label: false }) }}
+                            <span class="small">
+                                Активная настройка
+                            </span>
+                        </div>
+                    </span>
+            </div>
+        </div>
+    </label>
+
+</div>
+
+
+{# Сообщения #}
+
+<div class="card w-100 border-light">
+    <div class="card-body pb-0" id="collection-message">
+
+        <div class="d-flex justify-content-between gap-3 mb-3">
+            <div class="w-100 fw-bold">Сообщения</div>
+        </div>
+        {% for message_count, form in form.message %}
+            <div class='mb-3 item-message' id='item_{{ form.vars.id }}'>
+                {{ include(_self|replace({ "_form.html.twig": "/message/_message.html.twig" })) }}
+            </div>
+        {% endfor %}
+    </div>
+</div>
+
+<div class="card-footer border-light bg-body d-flex justify-content-between align-items-center">
+    <button
+            type="button"
+            id="messageAddCollection"
+            class="btn btn-sm btn-outline-primary border-0 message-add-collection"
+            data-prototype="{{ include(_self|replace({ "_form.html.twig": "message/_message.prototype.html.twig" }))|e('html_attr') }}"
+
+            data-collection="{{ form.message.vars.id }}-collection"
+            data-index="{{ form.message.count }}"
+            data-message="{{ form.message.vars.name }}"
+    >
+
+            <span class="svg-icon svg-icon-2">
+                    <svg xmlns="http://www.w3.org/2000/svg"
+                         width="24"
+                         height="24"
+                         viewBox="0 0 24 24"
+                         fill="none">
+                        <rect opacity="0.5"
+                              x="11"
+                              y="18"
+                              width="12"
+                              height="2"
+                              rx="1"
+                              transform="rotate(-90 11 18)"
+                              fill="currentColor">
+                    </rect>
+                        <rect x="6" y="11" width="12" height="2" rx="1" fill="currentColor"></rect>
+                    </svg>
+                </span>
+        Добавить еще сообщение
+    </button>
+</div>
