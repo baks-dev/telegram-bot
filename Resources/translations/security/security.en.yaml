@@ -1,5 +1,21 @@
 # Role
 ROLE_TELEGRAM_SETTINGS:
   header: 'Telegram'
-  name: 'Telegrambot'
-  desc: 'Telegram Bot connection settings'
+  name: 'Telegram-bot settings'
+  desc: 'Telegram Bot Connection Settings'
+
+ROLE_TELEGRAM_SETTINGS_INDEX:
+  name: 'Browse'
+  desc: 'Telegram Authorization Token List'
+
+ROLE_TELEGRAM_SETTINGS_DELETE:
+  name: 'Delete'
+  desc: 'Remove authorization token'
+
+ROLE_TELEGRAM_SETTINGS_EDIT:
+  name: 'Edit'
+  desc: 'Edit Authorization Token'
+
+ROLE_TELEGRAM_SETTINGS_NEW:
+  name: 'Add'
+  desc: 'Will add an authorization token'

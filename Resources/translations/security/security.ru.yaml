@@ -5,3 +5,19 @@ ROLE_TELEGRAM_SETTINGS:
   name: 'Telegram-bot настройки'
   desc: 'Настройки подключения Telegram Bot'
 
+ROLE_TELEGRAM_SETTINGS_INDEX:
+  name: 'Просмотр'
+  desc: 'Список токенов авторизации Telegram'
+
+ROLE_TELEGRAM_SETTINGS_DELETE:
+  name: 'Удалить'
+  desc: 'Удалить токен авторизации'
+
+ROLE_TELEGRAM_SETTINGS_EDIT:
+  name: 'Редактировать'
+  desc: 'Редактировать токен авторизации'
+
+ROLE_TELEGRAM_SETTINGS_NEW:
+  name: 'Добавить'
+  desc: 'Добавит токен авторизации'
+
