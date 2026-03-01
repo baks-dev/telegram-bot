@@ -35,7 +35,7 @@ use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 /**
  * Удаляет сообщение при клике по кнопке telegram-delete-message
  */
-#[AsMessageHandler]
+#[AsMessageHandler(priority: 0)]
 final readonly class TelegramDeleteMessageHandler
 {
     public const string DELETE_KEY = 'telegram-delete-message';
