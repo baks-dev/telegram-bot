@@ -28,7 +28,7 @@ use BaksDev\Users\Profile\Group\Type\Prefix\Voter\RoleVoterPrefix;
 use BaksDev\Users\Profile\UserProfile\Type\Id\UserProfileUid;
 use Symfony\Component\DependencyInjection\Attribute\Autoconfigure;
 
-#[Autoconfigure(public: true)]
+// #[Autoconfigure(public: true)]
 interface TelegramSecurityInterface
 {
     public function isGrantedProfile(
