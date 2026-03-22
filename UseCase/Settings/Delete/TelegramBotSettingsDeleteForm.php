@@ -36,7 +36,7 @@ final class TelegramBotSettingsDeleteForm extends AbstractType
         $builder->add(
             'telegram_bot_settings_delete',
             SubmitType::class,
-            ['label' => 'Save', 'label_html' => true, 'attr' => ['class' => 'btn-danger']]
+            ['label' => 'Save', 'label_html' => true, 'attr' => ['class' => 'btn-danger']],
         );
     }
 

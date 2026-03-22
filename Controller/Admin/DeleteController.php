@@ -67,7 +67,7 @@ class DeleteController extends AbstractController
                 'page.delete',
                 $handle instanceof TelegramBotSettings ? 'success.delete' : 'danger.delete',
                 'telegram.bot',
-                $handle
+                $handle,
             );
 
             return $this->redirectToRoute('telegram-bot:admin.index');
@@ -77,7 +77,7 @@ class DeleteController extends AbstractController
             [
                 'form' => $form->createView(),
                 'name' => "Настройка Telegram",
-            ]
+            ],
         );
     }
 }

@@ -51,8 +51,8 @@ final class TelegramProductForm extends AbstractType
                 },
                 function($product) {
                     return $product ? new ProductEventUid($product) : null;
-                }
-            )
+                },
+            ),
         );
 
 
@@ -65,8 +65,8 @@ final class TelegramProductForm extends AbstractType
                 },
                 function($offer) {
                     return $offer ? new ProductOfferUid($offer) : null;
-                }
-            )
+                },
+            ),
         );
 
 
@@ -79,8 +79,8 @@ final class TelegramProductForm extends AbstractType
                 },
                 function($variation) {
                     return $variation ? new ProductVariationUid($variation) : null;
-                }
-            )
+                },
+            ),
         );
 
 
@@ -93,8 +93,8 @@ final class TelegramProductForm extends AbstractType
                 },
                 function($modification) {
                     return $modification ? new ProductModificationUid($modification) : null;
-                }
-            )
+                },
+            ),
         );
 
     }

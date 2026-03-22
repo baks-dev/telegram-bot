@@ -54,7 +54,7 @@ final class TelegramBotSettingsHandler extends AbstractHandler
         /* Отправляем сообщение в шину */
         $this->messageDispatch->dispatch(
             message: new TelegramBotSettingsMessage($this->main->getEvent(), $this->main->getEvent()),
-            transport: 'telegram_bot'
+            transport: 'telegram_bot',
         );
 
         return $this->main;

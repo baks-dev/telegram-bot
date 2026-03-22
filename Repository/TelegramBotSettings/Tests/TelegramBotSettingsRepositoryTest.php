@@ -46,6 +46,6 @@ class TelegramBotSettingsRepositoryTest extends KernelTestCase
             ->setProfile(new UserProfileUid($profileUid))
             ->settings();
 
-//        dump($TelegramBotSettingsRepository->getToken());
+        //        dump($TelegramBotSettingsRepository->getToken());
     }
 }

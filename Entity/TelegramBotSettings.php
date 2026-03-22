@@ -60,9 +60,9 @@ class TelegramBotSettings extends EntityState
         return (string) $this->id;
     }
 
-    public function getId(): TelegramBotSettingsUid
+    public function getEvent(): TelegramBotSettingsEventUid
     {
-        return $this->id;
+        return $this->event;
     }
 
     public function setEvent(TelegramBotSettingsEvent|TelegramBotSettingsEventUid $event): void
@@ -70,8 +70,8 @@ class TelegramBotSettings extends EntityState
         $this->event = $event instanceof TelegramBotSettingsEvent ? $event->getId() : $event;
     }
 
-    public function getEvent(): TelegramBotSettingsEventUid
+    public function getId(): TelegramBotSettingsUid
     {
-        return $this->event;
+        return $this->id;
     }
 }

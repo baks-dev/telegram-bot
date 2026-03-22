@@ -86,7 +86,7 @@ final class TelegramSecurityRepository implements TelegramSecurityInterface
                 'profile_group_users',
                 ProfileGroup::class,
                 'profile_group',
-                'profile_group.prefix = profile_group_users.prefix AND profile_group.profile = :authority'
+                'profile_group.prefix = profile_group_users.prefix AND profile_group.profile = :authority',
             )
                 ->setParameter('authority', $authority, UserProfileUid::TYPE);
         }
@@ -96,7 +96,7 @@ final class TelegramSecurityRepository implements TelegramSecurityInterface
                 'profile_group_users',
                 ProfileGroup::class,
                 'profile_group',
-                'profile_group.prefix = profile_group_users.prefix'
+                'profile_group.prefix = profile_group_users.prefix',
             );
 
             $dbal->andWhere('profile_group_users.authority IS NULL');
@@ -107,7 +107,7 @@ final class TelegramSecurityRepository implements TelegramSecurityInterface
                 'profile_group',
                 ProfileRole::class,
                 'profile_group_role',
-                'profile_group_role.event = profile_group.event'
+                'profile_group_role.event = profile_group.event',
 
             );
 
@@ -117,7 +117,7 @@ final class TelegramSecurityRepository implements TelegramSecurityInterface
                 'profile_group_role',
                 ProfileVoter::class,
                 'profile_group_voter',
-                'profile_group_voter.role = profile_group_role.id AND profile_group_voter.prefix = :voter'
+                'profile_group_voter.role = profile_group_role.id AND profile_group_voter.prefix = :voter',
             )
             ->setParameter('voter', $voter, RoleVoterPrefix::TYPE);
 
@@ -139,7 +139,11 @@ final class TelegramSecurityRepository implements TelegramSecurityInterface
 
     }
 
-    public function isGranted(UserProfileUid|string $profile, string $role, UserProfileUid|string|null $authority = null): bool
+    public function isGranted(
+        UserProfileUid|string $profile,
+        string $role,
+        UserProfileUid|string|null $authority = null
+    ): bool
     {
         if(!class_exists(BaksDevUsersProfileGroupBundle::class))
         {
@@ -183,14 +187,14 @@ final class TelegramSecurityRepository implements TelegramSecurityInterface
                     'profile_group',
                     ProfileRole::class,
                     'profile_role',
-                    'profile_role.event = profile_group.event'
+                    'profile_role.event = profile_group.event',
                 );
 
                 $qb->leftJoin(
                     'profile_role',
                     ProfileVoter::class,
                     'profile_voter',
-                    'profile_voter.role = profile_role.id'
+                    'profile_voter.role = profile_role.id',
                 );
 
                 $qb->andWhere('profile_group.prefix = :prefix')
@@ -233,7 +237,7 @@ final class TelegramSecurityRepository implements TelegramSecurityInterface
         return false;
     }
 
-    public function isExistGranted(UserProfileUid|string $profile, string $role) : bool
+    public function isExistGranted(UserProfileUid|string $profile, string $role): bool
     {
         if(!class_exists(BaksDevUsersProfileGroupBundle::class))
         {
@@ -271,14 +275,14 @@ final class TelegramSecurityRepository implements TelegramSecurityInterface
                     'profile_group',
                     ProfileRole::class,
                     'profile_role',
-                    'profile_role.event = profile_group.event'
+                    'profile_role.event = profile_group.event',
                 );
 
                 $qb->leftJoin(
                     'profile_role',
                     ProfileVoter::class,
                     'profile_voter',
-                    'profile_voter.role = profile_role.id'
+                    'profile_voter.role = profile_role.id',
                 );
 
                 $qb->andWhere('profile_group.prefix = :prefix')

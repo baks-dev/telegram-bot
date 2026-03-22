@@ -52,7 +52,7 @@ final class EditControllerTest extends WebTestCase
         $client->request('GET', sprintf(self::URL, TelegramBotSettingsEventUid::TEST));
 
         self::assertResponseStatusCodeSame(403);
-//        self::assertResponseIsSuccessful();
+        //        self::assertResponseIsSuccessful();
     }
 
     /** Доступ по роли ROLE_ADMIN */

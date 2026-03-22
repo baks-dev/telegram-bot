@@ -4,11 +4,11 @@
 {% extends Template('/admin/base.html.twig') %}
 
 {% block title %}
-	{{ 'admin.page.settings'|trans }}
+    {{ 'admin.page.settings'|trans }}
 {% endblock %}
 
 {# ---- КОНТЕНТ-БЛОК ------------------------------------------------------------ #}
 {% block content %}
-	{{ include(_self|replace({ "template.html.twig": baks_settings.device~"/content.html.twig" })) }}
+    {{ include(_self|replace({ "template.html.twig": baks_settings.device~"/content.html.twig" })) }}
 {% endblock %}
 

@@ -37,7 +37,11 @@ interface TelegramSecurityInterface
         RoleVoterPrefix|string $voter
     ): bool;
 
-    public function isGranted(UserProfileUid|string $profile, string $role, UserProfileUid|string|null $authority = null): bool;
+    public function isGranted(
+        UserProfileUid|string $profile,
+        string $role,
+        UserProfileUid|string|null $authority = null
+    ): bool;
 
-    public function isExistGranted(UserProfileUid|string $profile, string $role) : bool;
+    public function isExistGranted(UserProfileUid|string $profile, string $role): bool;
 }

@@ -42,14 +42,13 @@ use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 final class TelegramBotSettingsForm extends AbstractType
 {
 
-    public function __construct(private AuthorizationCheckerInterface $authorizationChecker)
-    {}
+    public function __construct(private AuthorizationCheckerInterface $authorizationChecker) {}
 
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder->add('url',
             TextType::class,
-            ['help' => 'Пример: https://t.me/MyTelegramBot']
+            ['help' => 'Пример: https://t.me/MyTelegramBot'],
         );
 
         $builder->add('token', TextType::class);
@@ -60,9 +59,9 @@ final class TelegramBotSettingsForm extends AbstractType
                     return null;
                 },
                 function($token) {
-                    return $token ;
-                }
-            )
+                    return $token;
+                },
+            ),
         );
 
         $builder->add('secret', TextType::class);
@@ -73,19 +72,19 @@ final class TelegramBotSettingsForm extends AbstractType
                     return null;
                 },
                 function($secret) {
-                    return $secret ;
-                }
-            )
+                    return $secret;
+                },
+            ),
         );
 
         $builder->add(
             'connect',
             IntegerType::class,
-            ['attr' => ['max' => 100, 'min' => 1]]
+            ['attr' => ['max' => 100, 'min' => 1]],
         );
 
         /* Отобразить поле выбора профиля только для admin */
-        if (true === $this->authorizationChecker->isGranted('ROLE_ADMIN'))
+        if(true === $this->authorizationChecker->isGranted('ROLE_ADMIN'))
         {
             $builder->add('profile', TelegramBotSettingsProfileForm::class, ['required' => false, 'label' => false]);
         }
@@ -103,7 +102,7 @@ final class TelegramBotSettingsForm extends AbstractType
             'allow_add' => true,
             'label' => false,
             'prototype_name' => '__messages__',
-            'required' => true
+            'required' => true,
         ]);
 
 
@@ -111,7 +110,7 @@ final class TelegramBotSettingsForm extends AbstractType
         $builder->add(
             'telegram_bot_settings',
             SubmitType::class,
-            ['label' => 'Save', 'label_html' => true, 'attr' => ['class' => 'btn-primary']]
+            ['label' => 'Save', 'label_html' => true, 'attr' => ['class' => 'btn-primary']],
         );
     }
 

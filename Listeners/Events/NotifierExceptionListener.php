@@ -112,7 +112,7 @@ final class NotifierExceptionListener
 
         $menu[] = [
             'text' => $remove.' Удалить сообщение',
-            'callback_data' => 'telegram-delete-message'
+            'callback_data' => 'telegram-delete-message',
         ];
 
         $markup = json_encode([

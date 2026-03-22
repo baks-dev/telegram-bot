@@ -48,6 +48,11 @@ use Symfony\Component\Validator\Constraints as Assert;
 class TelegramBotSettingsEvent extends EntityEvent
 {
     /**
+     * Коллекция сообщений
+     */
+    #[ORM\OneToMany(targetEntity: TelegramBotSettingsMessage::class, mappedBy: 'event', cascade: ['all'])]
+    protected Collection $message;
+    /**
      * Идентификатор события
      */
     #[Assert\NotBlank]
@@ -55,8 +60,6 @@ class TelegramBotSettingsEvent extends EntityEvent
     #[ORM\Id]
     #[ORM\Column(type: TelegramBotSettingsEventUid::TYPE)]
     private TelegramBotSettingsEventUid $id;
-
-
     /**
      * Идентификатор Main
      */
@@ -64,46 +67,37 @@ class TelegramBotSettingsEvent extends EntityEvent
     #[Assert\Uuid]
     #[ORM\Column(type: TelegramBotSettingsUid::TYPE, nullable: true)]
     private ?TelegramBotSettingsUid $main = null;
-
-
     /**
      * Модификатор
      */
     #[ORM\OneToOne(targetEntity: TelegramBotSettingsModify::class, mappedBy: 'event', cascade: ['all'], fetch: 'EAGER')]
     private TelegramBotSettingsModify $modify;
-
     /**
      * Profile
      */
     #[ORM\OneToOne(targetEntity: TelegramBotSettingsProfile::class, mappedBy: 'event', cascade: ['all'], fetch: 'EAGER')]
     private TelegramBotSettingsProfile $profile;
-
     /** TelegramBotSettingsActive */
     #[ORM\OneToOne(targetEntity: TelegramBotSettingsActive::class, mappedBy: 'event', cascade: ['all'])]
     private ?TelegramBotSettingsActive $active = null;
-
-
     /**
      * Ссылка Telegram-бота
      */
     #[Assert\NotBlank]
     #[ORM\Column(type: Types::STRING, nullable: true)]
     private string $url;
-
     /**
      * Токен авторизации Telegram-бота
      */
     #[Assert\NotBlank]
     #[ORM\Column(type: Types::STRING)]
     private string $token;
-
     /**
      * Системный токен, для проверки подлинности запроса от бота
      */
     #[Assert\NotBlank]
     #[ORM\Column(type: Types::STRING)]
     private string $secret;
-
     /**
      * Максимально допустимое количество одновременных подключений для доставки обновлений
      */
@@ -111,13 +105,6 @@ class TelegramBotSettingsEvent extends EntityEvent
     #[Assert\Range(min: 1, max: 100)]
     #[ORM\Column(type: Types::SMALLINT)]
     private int $connect = 50;
-
-
-    /**
-     * Коллекция сообщений
-     */
-    #[ORM\OneToMany(targetEntity: TelegramBotSettingsMessage::class, mappedBy: 'event', cascade: ['all'])]
-    protected Collection $message;
 
     public function __construct()
     {
@@ -135,12 +122,6 @@ class TelegramBotSettingsEvent extends EntityEvent
         return (string) $this->id;
     }
 
-    public function getId(): TelegramBotSettingsEventUid
-    {
-        return $this->id;
-    }
-
-
     public function getMain(): TelegramBotSettingsUid
     {
         return $this->main;
@@ -149,6 +130,11 @@ class TelegramBotSettingsEvent extends EntityEvent
     public function setMain(TelegramBotSettings|TelegramBotSettingsUid $main): void
     {
         $this->main = $main instanceof TelegramBotSettings ? $main->getId() : $main;
+    }
+
+    public function getId(): TelegramBotSettingsEventUid
+    {
+        return $this->id;
     }
 
     public function getDto($dto): mixed

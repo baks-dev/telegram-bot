@@ -51,14 +51,14 @@ final class TelegramBotSecretKeyRepository implements TelegramBotSecretKeyInterf
             ->setParameter(
                 'event',
                 $event,
-                TelegramBotSettingsEventUid::TYPE
+                TelegramBotSettingsEventUid::TYPE,
             );
 
         $dbal->leftJoin(
             'settings',
             TelegramBotSettingsEvent::class,
             'event',
-            'settings.event = event.id'
+            'settings.event = event.id',
         );
 
         /* Profile */
@@ -66,7 +66,7 @@ final class TelegramBotSecretKeyRepository implements TelegramBotSecretKeyInterf
             'event',
             TelegramBotSettingsProfile::class,
             'profile',
-            'profile.event = event.id'
+            'profile.event = event.id',
         );
 
         /* Настройка должна быть активна */
@@ -74,7 +74,7 @@ final class TelegramBotSecretKeyRepository implements TelegramBotSecretKeyInterf
             'event',
             TelegramBotSettingsActive::class,
             'active',
-            'active.event = event.id AND active.value = true'
+            'active.event = event.id AND active.value = true',
         );
 
         $result = $dbal->fetchAssociative();

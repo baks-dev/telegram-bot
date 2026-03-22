@@ -35,8 +35,6 @@ use Symfony\Component\DependencyInjection\Attribute\When;
 #[When(env: 'test')]
 class TelegramSecurityRepositoryTest extends KernelTestCase
 {
-
-    /** @TODO: */
     public function testFindAll(): void
     {
         /** @var TelegramSecurityInterface $TelegramSecurityInterface */
@@ -53,7 +51,7 @@ class TelegramSecurityRepositoryTest extends KernelTestCase
             ->isGrantedProfile(
                 current: $profile,
                 authority: $authority,
-                voter: $role
+                voter: $role,
             );
     }
 }

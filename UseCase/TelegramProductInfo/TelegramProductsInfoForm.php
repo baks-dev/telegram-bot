@@ -48,7 +48,7 @@ final class TelegramProductsInfoForm extends AbstractType
         /* Сообщения */
         $settings = $this->TelegramSettingsRepository->settings();
 
-        if ($settings)
+        if($settings)
         {
             $messages = $settings->getMessages();
 
@@ -83,7 +83,7 @@ final class TelegramProductsInfoForm extends AbstractType
         $builder->add(
             'telegram_product_info',
             SubmitType::class,
-            ['label' => 'Save', 'label_html' => true, 'attr' => ['class' => 'btn-primary']]
+            ['label' => 'Save', 'label_html' => true, 'attr' => ['class' => 'btn-primary']],
         );
     }
 

@@ -62,7 +62,7 @@ final class IndexController extends AbstractController
             [
                 'query' => $TelegramSettings,
                 'search' => $searchForm->createView(),
-            ]
+            ],
         );
     }
 }

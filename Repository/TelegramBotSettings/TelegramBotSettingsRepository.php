@@ -76,14 +76,14 @@ final class TelegramBotSettingsRepository implements TelegramBotSettingsInterfac
             'settings',
             TelegramBotSettingsEvent::class,
             'event',
-            'event.id = settings.event'
+            'event.id = settings.event',
         );
 
         $dbal->leftJoin(
             'settings',
             TelegramBotSettingsMessage::class,
             'message',
-            'message.event = settings.event'
+            'message.event = settings.event',
         );
 
 
@@ -100,7 +100,7 @@ final class TelegramBotSettingsRepository implements TelegramBotSettingsInterfac
                 'settings',
                 TelegramBotSettingsProfile::class,
                 'profile',
-                'profile.event = settings.event AND profile.value = :project_profile'
+                'profile.event = settings.event AND profile.value = :project_profile',
             );
 
         $dbal->setParameter(
