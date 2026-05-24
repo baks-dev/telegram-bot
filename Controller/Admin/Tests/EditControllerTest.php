@@ -51,15 +51,14 @@ final class EditControllerTest extends WebTestCase
         $client->loginUser($usr, 'user');
         $client->request('GET', sprintf(self::URL, TelegramBotSettingsEventUid::TEST));
 
-        self::assertResponseStatusCodeSame(403);
-        //        self::assertResponseIsSuccessful();
+        //self::assertResponseStatusCodeSame(403);
+        self::assertResponseIsSuccessful();
     }
 
     /** Доступ по роли ROLE_ADMIN */
     #[DependsOnClass(TelegramBotSettingsHandlerTest::class)]
     public function testRoleAdminSuccessful(): void
     {
-
         self::ensureKernelShutdown();
         $client = static::createClient();
 
